@@ -27,3 +27,5 @@ Imports:
     tibble,
     tools,
     utils
+URL: https://github.com/fgualdr/GeneralNormalizer
+BugReports: https://github.com/fgualdr/GeneralNormalizer/issues
