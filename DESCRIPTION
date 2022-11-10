@@ -29,3 +29,6 @@ Imports:
     utils
 URL: https://github.com/fgualdr/GeneralNormalizer
 BugReports: https://github.com/fgualdr/GeneralNormalizer/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

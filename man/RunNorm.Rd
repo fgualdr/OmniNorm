@@ -53,12 +53,14 @@ RunNorm function to execute the whole normalisation flow.
 \examples{
 \dontrun{
 # Typical usage
-param <- BiocParallel::MulticoreParam(workers=2,progressbar = TRUE)
-Result = RunNorm(mat,
-                   deg_design,
-                  fix_reference="random",
-                 row_name_index=1,
-                saving_path=out_dir,
-               n_pop=1,BiocParam=param)
+param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
+Result <- RunNorm(mat,
+  deg_design,
+  fix_reference = "random",
+  row_name_index = 1,
+  saving_path = out_dir,
+  n_pop = 1, BiocParam = param
+)
 }
+
 }
