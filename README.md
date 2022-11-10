@@ -18,3 +18,7 @@ The main priciple stands out from the observation that not always median normali
 This in combination with the observation that for particular conditions we might have that the majority of the observations will change when comparing different conditions.
 
 Therefore we came up with a strategy to empirivcally identify invariant observations on the besis of the frequency distributions of their changes when comparing pair-wise samples. Those observation that will lie under a bellshaped cure (with different degree of symmetry and skewness after data normalisation) will be most likely invariant within the comparison as araising from the sum of different random effects (each following different distributions).
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->

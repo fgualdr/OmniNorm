@@ -4,11 +4,11 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Francesco", "Gualdrini", , "francesco.gualdrini@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: R set of functions to normalise any table. see publication xxx for reference.
+Description: R set of functions to normalise any table. see publication
+    xxx for reference.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+URL: https://github.com/fgualdr/GeneralNormalizer
+BugReports: https://github.com/fgualdr/GeneralNormalizer/issues
 Imports: 
     BiocParallel,
     circlize,
@@ -28,8 +28,9 @@ Imports:
     tibble,
     tools,
     utils
-URL: https://github.com/fgualdr/GeneralNormalizer
-BugReports: https://github.com/fgualdr/GeneralNormalizer/issues
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1

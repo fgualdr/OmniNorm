@@ -44,6 +44,10 @@ quantile_normalisation <- function(df) {
 #'
 #' @param data data frame to apply quantile norm
 #'
+#' @importFrom dplyr mutate filter
+#' @importFrom tibble rownames_to_column
+#' @importFrom stats median
+#'
 #' @returns a data frame  normalized
 #' @export
 #'
@@ -62,7 +66,7 @@ median_of_ratios_normalization <- function(data) {
   # find the ratio of the log data to the pseudo-reference e.g. the difference of log of the ratio
   ratios <- sweep(log_data[, 2:before_pseduo], 1, log_data[, pseudo_column], "-")
   # find the median of the ratios
-  sample_medians <- apply(ratios, 2, median)
+  sample_medians <- apply(ratios, 2, stats::median)
   # convert the median to a scaling factor
   scaling_factors <- exp(sample_medians)
   # use scaling factors to scale the original data
@@ -77,6 +81,8 @@ median_of_ratios_normalization <- function(data) {
 #' @param lc Correction factor for length normalization. This correction is done by dividing the counts vector by (length/1000)^lc.
 #'            If lc = 0, no length correction is applied. By default, lc = 1 for RPKM and lc = 0 for the other methods.
 #' @param k Counts equal to 0 are changed to k in order to avoid indeterminations when applying logarithms, for instance. By default, k = 0.
+#'
+#' @importFrom stats quantile na.omit
 #'
 #' @returns a data frame  normalized
 #' @export
@@ -106,13 +112,13 @@ uqua <- function(datos, long = 1000, lc = 1, k = 0) {
     } else {
       datitos <- datos
     }
-    q3 <- apply(datitos, 2, quantile, probs = 0.75)
+    q3 <- apply(datitos, 2, stats::quantile, probs = 0.75)
     d <- q3 * supertot / sum(q3)
     datos.norm <- (t(t(datos0) / d) * 10^9) / L
   } else {
     datos.norm <- datos0 / L
   }
-  na.omit(datos.norm)
+  stats::na.omit(datos.norm)
 }
 
 ## TMM: Trimmed Mean of M values normalization (Robinson & Oshlack, 2010)
@@ -128,6 +134,9 @@ uqua <- function(datos, long = 1000, lc = 1, k = 0) {
 #' @param sumTrim	Amount of trim to use on the combined absolute levels ("A" values) (only needed for tmm function).
 #' @param doWeighting	Logical, whether to compute (asymptotic binomial precision) weights (only needed for tmm function).
 #' @param Acutoff	Cutoff on "A" values to use before trimming (only needed for tmm function).
+#'
+#' @importFrom edgeR calcNormFactors
+#' @importFrom stats na.omit
 #'
 #' @returns a data frame  normalized
 #' @export
@@ -160,12 +169,14 @@ tmm <- function(datos, long = 1000, lc = 1, k = 0, refColumn = NULL,
   } else {
     datos.norm <- datos0 / L
   }
-  na.omit(datos.norm)
+  stats::na.omit(datos.norm)
 }
 
 #' Variance stabilisation
 #'
 #' @param norm_mat data frame to apply Variance stabilisation
+#'
+#' @importFrom stats quantile splinefun
 #'
 #' @returns Variance stabilized data frame
 #' @export
@@ -176,15 +187,15 @@ VarianceStabilized <- function(norm_mat) {
   xim <- 1
   baseVarsAtGrid <- xg * xg^2 + xim * xg
   integrand <- 1 / sqrt(baseVarsAtGrid)
-  splf <- splinefun(
+  splf <- stats::splinefun(
     asinh((xg[-1] + xg[-length(xg)]) / 2),
     cumsum(
       (xg[-1] - xg[-length(xg)]) *
         (integrand[-1] + integrand[-length(integrand)]) / 2
     )
   )
-  h1 <- quantile(rowMeans(ncounts), .95)
-  h2 <- quantile(rowMeans(ncounts), .999)
+  h1 <- stats::quantile(rowMeans(ncounts), .95)
+  h2 <- stats::quantile(rowMeans(ncounts), .999)
   eta <- (log2(h2) - log2(h1)) / (splf(asinh(h2)) - splf(asinh(h1)))
   xi <- log2(h1) - eta * splf(asinh(h1))
   tc <- sapply(colnames(norm_mat), function(clm) {

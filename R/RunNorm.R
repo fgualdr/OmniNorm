@@ -16,12 +16,12 @@
 #' @returns Return an object of class GNMSN which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
 #' @export
 #'
-#' @import graphics
+#' @import BiocParallel
+#' @importFrom dplyr mutate_all
+#' @importFrom data.table as.data.table
+#' @import tools
 #' @importFrom rlang .data
-#' @import grDevices
 #' @import methods
-#' @import stats
-#' @import utils
 #'
 #' @examples
 #' \dontrun{
@@ -286,8 +286,8 @@ RunNorm <- function(mat_path,
     write.table(design_scaling, file = paste0(saving_path, "/Normalisation_Parameters.txt"), sep = "\t", quote = FALSE, col.names = NA)
     write.table(norm_mat, file = paste0(saving_path, "/", file_name, "_normalized.txt"), sep = "\t", quote = FALSE, col.names = NA)
   }
-  setClass("GNMSN", representation(scaling_factors = "data.frame", ori_mat = "data.frame", norm_mat = "data.frame", "model_list" = "list"))
-  Result <- new("GNMSN", scaling_factors = design_scaling, ori_mat = mat[, rownames(design)], norm_mat = norm_mat, model_list = model_list)
+  methods::setClass("GNMSN", methods::representation(scaling_factors = "data.frame", ori_mat = "data.frame", norm_mat = "data.frame", "model_list" = "list"))
+  Result <- methods::new("GNMSN", scaling_factors = design_scaling, ori_mat = mat[, rownames(design)], norm_mat = norm_mat, model_list = model_list)
   # Save to oath the scaled tables as "Norm_table"
   return(Result)
 }

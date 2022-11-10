@@ -7,11 +7,7 @@
 #' @export
 #'
 #' @import mixsmsn
-#' @import graphics
-#' @import grDevices
-#' @import methods
-#' @import stats
-#' @import utils
+#' @import fitdistrplus
 #'
 #' @examples
 #' \dontrun{

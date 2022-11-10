@@ -9,12 +9,14 @@
 #' @returns Save plots and table to the "saving_pth"/Norm_quality/
 #' @export
 #'
-#' @import graphics
-#' @importFrom rlang .data
 #' @import grDevices
+#' @import graphics 
+#' @import FactoMineR
+#' @import circlize
+#' @import ComplexHeatmap
+#' @import grid
 #' @import methods
-#' @import stats
-#' @import utils
+#' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{
@@ -44,9 +46,9 @@ QC_plot <- function(gnmsn_obj,
     stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
   }
 
-  norm_mat <- slot(gnmsn_obj, "norm_mat")
-  ori_mat <- slot(gnmsn_obj, "ori_mat")
-  scaling_factors <- slot(gnmsn_obj, "scaling_factors")
+  norm_mat <- methods::slot(gnmsn_obj, "norm_mat")
+  ori_mat <- methods::slot(gnmsn_obj, "ori_mat")
+  scaling_factors <- methods::slot(gnmsn_obj, "scaling_factors")
 
   norm_mat <- norm_mat[rowMeans(norm_mat) > 0, ]
   if (max(norm_mat) > .Machine$integer.max) {

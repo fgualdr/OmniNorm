@@ -7,10 +7,8 @@
 #' @export
 #'
 #' @import mixsmsn
-#' @import graphics
 #' @import grDevices
-#' @import methods
-#' @import stats
+#' @import graphics 
 #' @import utils
 #'
 #' @examples
