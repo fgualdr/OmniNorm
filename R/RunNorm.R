@@ -6,7 +6,7 @@
 #' @param row_name_index column index where to find the rownames of the matrix (default 1)
 #' @param n_pop n° of populations expected (default NULL)
 #' @param n_pop_reference n° of expected populations in the initial within references normalisation (default NULL)
-#' @param saving_path full path where results are saved
+#' @param saving_path full path where results are saved default to the working directory
 #' @param sigma_times number of sigmas defining lower and upper bounds to include features (i.e. genes, peaks, proteins ,..) considered to be unchanged relative to the mean distribution
 #' @param dist_family distribution family see package mixsmsn (default "Skew.normal")
 #' @param Norm_plot Whether or not to save individual plots during normalisation (defulat TRUE)
@@ -17,6 +17,7 @@
 #' @export
 #'
 #' @import graphics
+#' @importFrom rlang .data
 #' @import grDevices
 #' @import methods
 #' @import stats
@@ -26,6 +27,7 @@
 #' \dontrun{
 #' # Typical usage
 #' param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
+#'
 #' Result <- RunNorm(mat,
 #'   deg_design,
 #'   fix_reference = "random",
@@ -41,12 +43,15 @@ RunNorm <- function(mat_path,
                     row_name_index = 1,
                     n_pop = NULL,
                     n_pop_reference = NULL,
-                    saving_path = saving_path,
+                    saving_path = NULL,
                     sigma_times = 1,
                     dist_family = "Skew.normal",
                     Norm_plot = TRUE,
                     Save_results = TRUE,
                     BiocParam = NULL) {
+  if (is.null(saving_path)) {
+    stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
+  }
   if (is.numeric(n_pop_reference)) {
     if (n_pop_reference > 3) {
       stop("n_pop must be between 1 and 3")
@@ -171,7 +176,7 @@ RunNorm <- function(mat_path,
     })
   }
 
-  cat("|| Computing models Done.\n")
+  cat("|| Computing models Done\n")
   # Scaling and create Av. Sample, Append to mat[,rownames(design)]
   pairs$scaling <- NA
   scaling_ll <- lapply(1:length(model_list), function(x) {
@@ -201,7 +206,7 @@ RunNorm <- function(mat_path,
   pairscombo <- pairscombo[order(pairscombo$sample_index), ]
   pairscombo <- data.table::as.data.table(pairscombo)
   pairscombo$scaling <- as.numeric(as.character(pairscombo$scaling))
-  pairscombo <- pairscombo[, .(av_scaling = mean(scaling)), .(samples)]
+  pairscombo <- pairscombo[, list(av_scaling = mean(.data$scaling)), list(.data$samples)]
   mat_append <- mat[, rownames(design)]
   mm <- mat[, as.character(pairscombo$samples)]
   mat_append$average_reference <- rowMeans(as.matrix(mm) %*% diag(pairscombo$av_scaling))

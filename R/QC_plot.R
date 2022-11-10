@@ -1,5 +1,42 @@
-
-QC_plot <- function(gnmsn_obj, design_path, custom_table = NULL, saving_path = path, norm_methods = c("quantile_normalisation", "median_of_ratios_normalization", "uqua", "tmm")) {
+#' QC_plot Function performing QC by PCA analysis.
+#'
+#' @param gnmsn_obj path to the matrix (n * m having features i.e. genes, proteins, chipseq peaks in the raws and individual samples in the columns)
+#' @param design_path design matrix describing the samples. design matrix must be composed by:  Sample_ID, Sample_Condition and Sample_Replicate columns (layers in Sample_conditions will be defined by "_" separator)
+#' @param custom_table vector of Sample_ID names to be used as initial reference for normalisation. If random specified it select randomly 30% of the samples (To be improoved considering global coverage and intensity in order to avoid failed samples) (default NULL)
+#' @param saving_path full path where results are saved . default to the working directory
+#' @param norm_methods normalisation methods to compare the GNMSN : can be one of "quantile_normalisation", "median_of_ratios_normalization", "uqua", "tmm"
+#'
+#' @returns Save plots and table to the "saving_pth"/Norm_quality/
+#' @export
+#'
+#' @import graphics
+#' @importFrom rlang .data
+#' @import grDevices
+#' @import methods
+#' @import stats
+#' @import utils
+#'
+#' @examples
+#' \dontrun{
+#' # Typical usage
+#' param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
+#'
+#' Result <- RunNorm(mat,
+#'   deg_design,
+#'   fix_reference = "random",
+#'   row_name_index = 1,
+#'   saving_path = out_dir,
+#'   n_pop = 1, BiocParam = param
+#' )
+#'
+#' QC_plot(Result, deg_design, saving_path = out_dir)
+#' }
+#'
+QC_plot <- function(gnmsn_obj,
+                    design_path,
+                    custom_table = NULL,
+                    saving_path = NULL,
+                    norm_methods = c("quantile_normalisation", "median_of_ratios_normalization", "uqua", "tmm")) {
   if (!is.null(saving_path)) {
     save <- paste0(saving_path, "/Norm_quality/")
     dir.create(save)
@@ -97,7 +134,7 @@ QC_plot <- function(gnmsn_obj, design_path, custom_table = NULL, saving_path = p
   } else {
     design <- as.data.frame(as.matrix(design_path), stringsAsFactors = FALSE)
   }
-  design <- within(design, Condition <- data.frame(do.call("rbind", strsplit(as.character(Sample_Condition), "_", fixed = TRUE))))
+  design <- within(design, Condition <- data.frame(do.call("rbind", strsplit(as.character(.data$Sample_Condition), "_", fixed = TRUE))))
   design <- design[order(design[, "Condition"][, tail(colnames(design[, "Condition"]), n = 1)]), ]
   design <- design[order(design[, "Condition"][, head(colnames(design[, "Condition"]), n = 1)]), ]
   w <- which(design$Sample_ID %in% colnames(ori_mat))

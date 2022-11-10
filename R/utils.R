@@ -1,7 +1,12 @@
-# Utility functions
-"%!in%" <- Negate("%in%")
+#' noceros To count number of non-zero elements
+#'
+#' @param x vector to check zeros
+#' @param num if vector is numeric TRUE FALSE
+#' @param k default is 0
+#'
+#' @returns return non zero elements
+#' @export
 
-## To count number of non-zero elements
 noceros <- function(x, num = TRUE, k = 0) {
   nn <- length(which(x > k))
   if (num) {
@@ -15,8 +20,14 @@ noceros <- function(x, num = TRUE, k = 0) {
   }
 }
 
+#' quantile_normalisation
+#'
+#' @param df data frame to apply quantile norm
+#'
+#' @returns a data frame  normalized
+#' @export
+#'
 
-# Quantile norm
 quantile_normalisation <- function(df) {
   df_rank <- apply(df, 2, rank, ties.method = "min")
   df_sorted <- data.frame(apply(df, 2, sort))
@@ -29,14 +40,21 @@ quantile_normalisation <- function(df) {
   return(df_final)
 }
 
-# Median of ratios - DESEQ2 def
+#' median_of_ratios_normalization
+#'
+#' @param data data frame to apply quantile norm
+#'
+#' @returns a data frame  normalized
+#' @export
+#'
+
 median_of_ratios_normalization <- function(data) {
   # take the log
   log_data <- log(data)
   # find the psuedo-references per sample by taking the geometric mean
   log_data <- dplyr::mutate(log_data, pseudo_reference = rowMeans(log_data))
   log_data <- tibble::rownames_to_column(log_data, "gene")
-  log_data <- dplyr::filter(log_data, pseudo_reference != "-Inf")
+  log_data <- dplyr::filter(log_data, .data$pseudo_reference != "-Inf")
   # the last columns is the pseudo-reference column
   pseudo_column <- ncol(log_data)
   # where to stop before the pseudo column
@@ -52,7 +70,18 @@ median_of_ratios_normalization <- function(data) {
   return(manually_normalized)
 }
 
-# Upper quartile normalisation
+#' Upper quartile normalisation
+#'
+#' @param datos Matrix containing the read counts for each sample.
+#' @param long Numeric vector containing the length of the features. If long == 1000, no length correction is applied (no matter the value of parameter lc).
+#' @param lc Correction factor for length normalization. This correction is done by dividing the counts vector by (length/1000)^lc.
+#'            If lc = 0, no length correction is applied. By default, lc = 1 for RPKM and lc = 0 for the other methods.
+#' @param k Counts equal to 0 are changed to k in order to avoid indeterminations when applying logarithms, for instance. By default, k = 0.
+#'
+#' @returns a data frame  normalized
+#' @export
+#'
+
 uqua <- function(datos, long = 1000, lc = 1, k = 0) {
   sinceros <- function(datos, k) {
     datos0 <- datos
@@ -87,6 +116,23 @@ uqua <- function(datos, long = 1000, lc = 1, k = 0) {
 }
 
 ## TMM: Trimmed Mean of M values normalization (Robinson & Oshlack, 2010)
+#' Upper quartile normalisation
+#'
+#' @param datos Matrix containing the read counts for each sample.
+#' @param long Numeric vector containing the length of the features. If long == 1000, no length correction is applied (no matter the value of parameter lc).
+#' @param lc Correction factor for length normalization. This correction is done by dividing the counts vector by (length/1000)^lc.
+#'            If lc = 0, no length correction is applied. By default, lc = 1 for RPKM and lc = 0 for the other methods.
+#' @param k Counts equal to 0 are changed to k in order to avoid indeterminations when applying logarithms, for instance. By default, k = 0.
+#' @param refColumn	Column to use as reference (only needed for tmm function).
+#' @param logratioTrim	Amount of trim to use on log-ratios ("M" values) (only needed for tmm function).
+#' @param sumTrim	Amount of trim to use on the combined absolute levels ("A" values) (only needed for tmm function).
+#' @param doWeighting	Logical, whether to compute (asymptotic binomial precision) weights (only needed for tmm function).
+#' @param Acutoff	Cutoff on "A" values to use before trimming (only needed for tmm function).
+#'
+#' @returns a data frame  normalized
+#' @export
+#'
+
 tmm <- function(datos, long = 1000, lc = 1, k = 0, refColumn = NULL,
                 logratioTrim = .3, sumTrim = 0.05, doWeighting = TRUE,
                 Acutoff = -1e10) {
@@ -117,7 +163,13 @@ tmm <- function(datos, long = 1000, lc = 1, k = 0, refColumn = NULL,
   na.omit(datos.norm)
 }
 
-# Variance stabilisation:
+#' Variance stabilisation
+#'
+#' @param norm_mat data frame to apply Variance stabilisation
+#'
+#' @returns Variance stabilized data frame
+#' @export
+#'
 VarianceStabilized <- function(norm_mat) {
   ncounts <- norm_mat
   xg <- sinh(seq(asinh(0), asinh(max(ncounts)), length.out = 1000))[-1]

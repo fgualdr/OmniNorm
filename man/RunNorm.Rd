@@ -11,7 +11,7 @@ RunNorm(
   row_name_index = 1,
   n_pop = NULL,
   n_pop_reference = NULL,
-  saving_path = saving_path,
+  saving_path = NULL,
   sigma_times = 1,
   dist_family = "Skew.normal",
   Norm_plot = TRUE,
@@ -32,7 +32,7 @@ RunNorm(
 
 \item{n_pop_reference}{n° of expected populations in the initial within references normalisation (default NULL)}
 
-\item{saving_path}{full path where results are saved}
+\item{saving_path}{full path where results are saved default to the working directory}
 
 \item{sigma_times}{number of sigmas defining lower and upper bounds to include features (i.e. genes, peaks, proteins ,..) considered to be unchanged relative to the mean distribution}
 
@@ -54,6 +54,7 @@ RunNorm function to execute the whole normalisation flow.
 \dontrun{
 # Typical usage
 param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
+
 Result <- RunNorm(mat,
   deg_design,
   fix_reference = "random",

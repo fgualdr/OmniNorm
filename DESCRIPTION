@@ -23,6 +23,7 @@ Imports:
     grid,
     methods,
     mixsmsn,
+    rlang,
     stats,
     tibble,
     tools,
