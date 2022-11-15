@@ -8,7 +8,7 @@
 #'
 #' @import mixsmsn
 #' @import grDevices
-#' @import graphics 
+#' @import graphics
 #' @import utils
 #'
 #' @examples

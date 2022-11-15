@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @import grDevices
-#' @import graphics 
+#' @import graphics
 #' @import FactoMineR
 #' @import circlize
 #' @import ComplexHeatmap

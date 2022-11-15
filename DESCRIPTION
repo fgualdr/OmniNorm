@@ -1,15 +1,32 @@
 Package: GeneralNormalizer
 Title: What the Package Does (One Line, Title Case)
-Version: 0.99.0
-Date: 2022-11-11
+Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+    person("Francesco", "Gualdrini", , "francesco.gualdrini@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-6180-7292"))
 Description: What the package does (one paragraph).
-License: Artistic-2.0
-URL: https://github.com/fgualdr/GeneralNormalizer
-BugReports: https://support.bioconductor.org/t/GeneralNormalizer
-biocViews: Software
+License: MIT + file LICENSE
 Encoding: UTF-8
+Language: Authors@R
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2
+Imports: 
+    BiocParallel,
+    circlize,
+    ComplexHeatmap,
+    data.table,
+    dplyr,
+    edgeR,
+    FactoMineR,
+    graphics,
+    grDevices,
+    grid,
+    methods,
+    rlang,
+    stats,
+    tibble,
+    tools,
+    utils
+Depends: 
+    fitdistrplus,
+    mixsmsn
