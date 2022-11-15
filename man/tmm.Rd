@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{tmm}
 \alias{tmm}
-\title{Upper quartile normalisation}
+\title{tmm: Trimmed Mean of M values normalization (Robinson & Oshlack, 2010)}
 \usage{
 tmm(
   datos,
@@ -40,5 +40,5 @@ If lc = 0, no length correction is applied. By default, lc = 1 for RPKM and lc =
 a data frame  normalized
 }
 \description{
-Upper quartile normalisation
+tmm: Trimmed Mean of M values normalization (Robinson & Oshlack, 2010)
 }

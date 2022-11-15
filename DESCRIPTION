@@ -1,36 +1,15 @@
 Package: GeneralNormalizer
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Version: 0.99.0
+Date: 2022-11-11
 Authors@R: 
-    person("Francesco", "Gualdrini", , "francesco.gualdrini@gmail.com", role = c("aut", "cre"),
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: R set of functions to normalise any table. see publication
-    xxx for reference.
-License: MIT + file LICENSE
+Description: What the package does (one paragraph).
+License: Artistic-2.0
 URL: https://github.com/fgualdr/GeneralNormalizer
-BugReports: https://github.com/fgualdr/GeneralNormalizer/issues
-Imports: 
-    BiocParallel,
-    circlize,
-    ComplexHeatmap,
-    data.table,
-    dplyr,
-    edgeR,
-    FactoMineR,
-    fitdistrplus,
-    graphics,
-    grDevices,
-    grid,
-    methods,
-    mixsmsn,
-    rlang,
-    stats,
-    tibble,
-    tools,
-    utils
-Suggests: 
-    testthat (>= 3.0.0)
-Config/testthat/edition: 3
+BugReports: https://support.bioconductor.org/t/GeneralNormalizer
+biocViews: Software
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
