@@ -17,7 +17,7 @@ The goal of `GeneralNormalizer` is to …
 
 Get the latest stable `R` release from
 [CRAN](http://cran.r-project.org/). Then install `GeneralNormalizer`
-from [Bioconductor](http://bioconductor.org/) using the following code:
+using the following code:
 
 ``` r
 require(devtools)
