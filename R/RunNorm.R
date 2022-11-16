@@ -183,8 +183,8 @@ RunNorm <- function(mat_path,
     reference_name <- as.character(pairs[x, "reference"])
     sample_name <- as.character(pairs[x, "samples"])
     model <- model_list[[x]]
-    ww <- which(log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) >= model$interval["lb"] &
-      log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) <= model$interval["ub"])
+    ww <- which(log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) >= model[["interval"]]["lb"] &
+      log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) <= model[["interval"]]["ub"])
     mm <- mat[ww, c(sample_name, reference_name)]
     pseudo_cov <- colSums(mm)
     rat <- pseudo_cov[2] / pseudo_cov[1]
@@ -249,8 +249,8 @@ RunNorm <- function(mat_path,
     reference_name <- as.character(pairs[x, "reference"])
     sample_name <- as.character(pairs[x, "samples"])
     model <- model_list[[x]]
-    ww <- which(log(mat_append[, reference_name] / mat_append[, sample_name]) >= model$interval["lb"] &
-      log(mat_append[, reference_name] / mat_append[, sample_name]) <= model$interval["ub"])
+    ww <- which(log(mat_append[, reference_name] / mat_append[, sample_name]) >= model[["interval"]]["lb"] &
+      log(mat_append[, reference_name] / mat_append[, sample_name]) <= model[["interval"]]["ub"])
     pseudo_cov <- colSums(mat_append[ww, c(sample_name, reference_name)])
     rat <- pseudo_cov[2] / pseudo_cov[1]
     names(rat) <- x
@@ -265,7 +265,7 @@ RunNorm <- function(mat_path,
       reference_name <- as.character(pairs[x, "reference"])
       sample_name <- as.character(pairs[x, "samples"])
       model <- model_list[[x]]
-      ll <- list("model" = model, "mat_append" = mat_append, "sample_name" = sample_name, "reference_name" = reference_name, "saving_path" = saving_path, "n_pop" = model$n_pop)
+      ll <- list("model" = model, "mat_append" = mat_append, "sample_name" = sample_name, "reference_name" = reference_name, "saving_path" = saving_path, "n_pop" = model[["n_pop"]])
       return(ll)
     })
     BiocParallel::bplapply(plot_l, plot_pair_model, BPPARAM = BiocParam)
