@@ -8,14 +8,8 @@ output: github_document
 [![GitHub issues](https://img.shields.io/github/issues/fgualdr/GeneralNormalizer)](https://github.com/fgualdr/GeneralNormalizer/issues)
 [![GitHub pulls](https://img.shields.io/github/issues-pr/fgualdr/GeneralNormalizer)](https://github.com/fgualdr/GeneralNormalizer/pulls)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![Bioc release status](http://www.bioconductor.org/shields/build/release/bioc/GeneralNormalizer.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/GeneralNormalizer)
-[![Bioc devel status](http://www.bioconductor.org/shields/build/devel/bioc/GeneralNormalizer.svg)](https://bioconductor.org/checkResults/devel/bioc-LATEST/GeneralNormalizer)
-[![Bioc downloads rank](https://bioconductor.org/shields/downloads/release/GeneralNormalizer.svg)](http://bioconductor.org/packages/stats/bioc/GeneralNormalizer/)
-[![Bioc support](https://bioconductor.org/shields/posts/GeneralNormalizer.svg)](https://support.bioconductor.org/tag/GeneralNormalizer)
-[![Bioc history](https://bioconductor.org/shields/years-in-bioc/GeneralNormalizer.svg)](https://bioconductor.org/packages/release/bioc/html/GeneralNormalizer.html#since)
-[![Bioc last commit](https://bioconductor.org/shields/lastcommit/devel/bioc/GeneralNormalizer.svg)](http://bioconductor.org/checkResults/devel/bioc-LATEST/GeneralNormalizer/)
-[![Bioc dependencies](https://bioconductor.org/shields/dependencies/release/GeneralNormalizer.svg)](https://bioconductor.org/packages/release/bioc/html/GeneralNormalizer.html#since)
 [![R-CMD-check-bioc](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml)
+[![R-CMD-check](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of `GeneralNormalizer` is to ...

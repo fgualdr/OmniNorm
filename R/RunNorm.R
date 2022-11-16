@@ -52,13 +52,13 @@ RunNorm <- function(mat_path,
   if (is.null(saving_path)) {
     stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
   }
-  
+
   if (n_pop_reference > 3 | is.null(n_pop_reference)) {
-      stop("n_pop_reference must be between 1 and 3")
+    stop("n_pop_reference must be between 1 and 3")
   }
 
   if (n_pop > 3 | is.null(n_pop)) {
-      stop("n_pop must be between 1 and 3")
+    stop("n_pop must be between 1 and 3")
   }
 
   # Import the tables
@@ -206,10 +206,12 @@ RunNorm <- function(mat_path,
   pairscombo <- data.table::as.data.table(pairscombo)
   pairscombo$scaling <- as.numeric(as.character(pairscombo$scaling))
 
-  pairscombo = split(pairscombo,pairscombo$samples)
-  pairscombo = lapply(pairscombo,function(x){mean(x$scaling)})
-  pairscombo = data.table::as.data.table(cbind(names(pairscombo),unlist(pairscombo)))
-  colnames(pairscombo) = c("samples","av_scaling")
+  pairscombo <- split(pairscombo, pairscombo$samples)
+  pairscombo <- lapply(pairscombo, function(x) {
+    mean(x$scaling)
+  })
+  pairscombo <- data.table::as.data.table(cbind(names(pairscombo), unlist(pairscombo)))
+  colnames(pairscombo) <- c("samples", "av_scaling")
 
   mat_append <- mat[, rownames(design)]
   mm <- mat[, as.character(pairscombo$samples)]
@@ -285,7 +287,7 @@ RunNorm <- function(mat_path,
     })
     if (!is.null(BiocParam)) {
       BiocParallel::bplapply(plot_l, plot_pair_model, BPPARAM = BiocParam)
-    }else{
+    } else {
       lapply(plot_l, plot_pair_model)
     }
   }

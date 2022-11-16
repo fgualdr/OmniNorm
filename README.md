@@ -1,6 +1,4 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 # GeneralNormalizer
 
 <!-- badges: start -->
@@ -9,6 +7,10 @@
 issues](https://img.shields.io/github/issues/fgualdr/GeneralNormalizer)](https://github.com/fgualdr/GeneralNormalizer/issues)
 [![GitHub
 pulls](https://img.shields.io/github/issues-pr/fgualdr/GeneralNormalizer)](https://github.com/fgualdr/GeneralNormalizer/pulls)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check-bioc](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml)
+[![R-CMD-check](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of `GeneralNormalizer` is to …
@@ -17,10 +19,9 @@ The goal of `GeneralNormalizer` is to …
 
 Get the latest stable `R` release from
 [CRAN](http://cran.r-project.org/). Then install `GeneralNormalizer`
-using the following code:
+using devtool:
 
 ``` r
 require(devtools)
 install_github("fgualdr/GeneralNormalizer")
 ```
-

@@ -6,10 +6,9 @@ Authors@R:
            comment = c(ORCID = "0000-0002-6180-7292"))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
-Encoding: UTF-8
-Language: Authors@R
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+Depends: 
+    fitdistrplus,
+    mixsmsn
 Imports: 
     BiocParallel,
     circlize,
@@ -27,6 +26,7 @@ Imports:
     tibble,
     tools,
     utils
-Depends: 
-    fitdistrplus,
-    mixsmsn
+Encoding: UTF-8
+Language: Authors@R
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.2
