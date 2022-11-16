@@ -41,8 +41,8 @@ RunNorm <- function(mat_path,
                     design_path,
                     fix_reference = NULL,
                     row_name_index = 1,
-                    n_pop = NULL,
-                    n_pop_reference = NULL,
+                    n_pop = 1,
+                    n_pop_reference = 1,
                     saving_path = NULL,
                     sigma_times = 1,
                     dist_family = "Skew.normal",
@@ -52,20 +52,20 @@ RunNorm <- function(mat_path,
   if (is.null(saving_path)) {
     stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
   }
-  if (is.numeric(n_pop_reference)) {
-    if (n_pop_reference > 3) {
-      stop("n_pop must be between 1 and 3")
-    }
+  
+  if (n_pop_reference > 3 | is.null(n_pop_reference)) {
+      stop("n_pop_reference must be between 1 and 3")
   }
-  if (is.numeric(n_pop)) {
-    if (n_pop > 3) {
+
+  if (n_pop > 3 | is.null(n_pop)) {
       stop("n_pop must be between 1 and 3")
-    }
   }
+
   # Import the tables
   cat("|| Import matrix\n")
   # If character is a path, if data.frame just assign
-  if(is.character(mat_path)) {mat = read.delim(mat_path,sep="\t",stringsAsFactors=FALSE,row.names=row_name_index)}else{mat=mat_path}
+  if(is.character(mat_path)) {
+    mat = read.delim(mat_path,sep="\t",stringsAsFactors=FALSE,row.names=row_name_index)}else{mat=mat_path}
   cat("|| DONE\n")
   # Import the Design Table
   cat("|| Import Design table\n")
@@ -134,7 +134,6 @@ RunNorm <- function(mat_path,
 
   cat(" || Compute Mixture of Skew-Normal Distributions ||\n")
   if(!is.null(BiocParam)) { 
-    model_list=list()
     rat_l = lapply(1:nrow(pairs),function(x){
       ratio = log( mat_sample[,as.character(pairs[x,"reference"])] / mat_sample[,as.character(pairs[x,"samples"])] )
       # Only consider finite values
@@ -142,6 +141,7 @@ RunNorm <- function(mat_path,
       if(length(ratio)==0){cat("ERROR!!!")} # Check!
       return(list("ratio"=ratio,"n_pop"=n_pop_reference,"sigma_times"=sigma_times,"dist_family"=dist_family,"index"=x))
     })
+    model_list=list()
     model_list = tryCatch({BiocParallel::bplapply( rat_l , pair_fit ,BPPARAM = BiocParam)},error=identity)
   }else{
     model_list=list()
