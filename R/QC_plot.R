@@ -46,9 +46,9 @@ QC_plot <- function(gnmsn_obj,
     stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
   }
 
-  norm_mat <- methods::slot(gnmsn_obj, "norm_mat")
-  ori_mat <- methods::slot(gnmsn_obj, "ori_mat")
-  scaling_factors <- methods::slot(gnmsn_obj, "scaling_factors")
+  norm_mat <- gnmsn_obj[["norm_mat"]]
+  ori_mat <- gnmsn_obj[["ori_mat"]]
+  scaling_factors <- gnmsn_obj[["scaling_factors"]]
 
   norm_mat <- norm_mat[rowMeans(norm_mat) > 0, ]
   if (max(norm_mat) > .Machine$integer.max) {

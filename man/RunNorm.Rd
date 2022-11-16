@@ -45,7 +45,7 @@ RunNorm(
 \item{BiocParam}{BiocParallel param object to be specified as : "param <- BiocParallel::MulticoreParam(workers=2,progressbar = TRUE)" (default NULL)}
 }
 \value{
-Return an object of class GNMSN which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
+Return a list which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
 }
 \description{
 RunNorm function to execute the whole normalisation flow.

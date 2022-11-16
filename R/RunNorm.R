@@ -13,7 +13,7 @@
 #' @param Save_results whether to save individual plots and results (default TRUE)
 #' @param BiocParam BiocParallel param object to be specified as : "param <- BiocParallel::MulticoreParam(workers=2,progressbar = TRUE)" (default NULL)
 #'
-#' @returns Return an object of class GNMSN which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
+#' @returns Return a list which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
 #' @export
 #'
 #' @import BiocParallel
@@ -298,6 +298,7 @@ RunNorm <- function(mat_path,
   design_scaling <- design
   design_scaling$scaling <- pairs$scaling
   design_scaling$mean_g <- pairs$mean_g
+
   if (Save_results == TRUE) {
     if (is.character(mat_path)) {
       file_name <- tools::file_path_sans_ext(mat_path)
@@ -308,8 +309,9 @@ RunNorm <- function(mat_path,
     write.table(design_scaling, file = paste0(saving_path, "/Normalisation_Parameters.txt"), sep = "\t", quote = FALSE, col.names = NA)
     write.table(norm_mat, file = paste0(saving_path, "/", file_name, "_normalized.txt"), sep = "\t", quote = FALSE, col.names = NA)
   }
-  methods::setClass("GNMSN", methods::representation(scaling_factors = "data.frame", ori_mat = "data.frame", norm_mat = "data.frame", "model_list" = "list"))
-  Result <- methods::new("GNMSN", scaling_factors = design_scaling, ori_mat = mat[, rownames(design)], norm_mat = norm_mat, model_list = model_list)
+
+  Result <- list(scaling_factors = design_scaling, ori_mat = mat[, rownames(design)], norm_mat = norm_mat, model_list = model_list)
   # Save to oath the scaled tables as "Norm_table"
+  class(obj.out) <- "GMSN"
   return(Result)
 }
