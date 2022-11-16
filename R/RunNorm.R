@@ -205,7 +205,12 @@ RunNorm <- function(mat_path,
   pairscombo <- pairscombo[order(pairscombo$sample_index), ]
   pairscombo <- data.table::as.data.table(pairscombo)
   pairscombo$scaling <- as.numeric(as.character(pairscombo$scaling))
-  pairscombo <- pairscombo[, list(av_scaling = mean(.data$scaling)), list(.data$samples)]
+
+  pairscombo = split(pairscombo,pairscombo$samples)
+  pairscombo = lapply(pairscombo,function(x){mean(x$scaling)})
+  pairscombo = data.table::as.data.table(cbind(names(pairscombo),unlist(pairscombo)))
+  colnames(pairscombo) = c("samples","av_scaling")
+
   mat_append <- mat[, rownames(design)]
   mm <- mat[, as.character(pairscombo$samples)]
   mat_append$average_reference <- rowMeans(as.matrix(mm) %*% diag(pairscombo$av_scaling))
@@ -244,6 +249,8 @@ RunNorm <- function(mat_path,
   cat("|| Done.\n")
 
   pairs$scaling <- NA
+  pairs$mean_g <- NA
+
   scaling_ll <- lapply(1:length(model_list), function(x) {
     reference_name <- as.character(pairs[x, "reference"])
     sample_name <- as.character(pairs[x, "samples"])
@@ -255,7 +262,16 @@ RunNorm <- function(mat_path,
     names(rat) <- x
     return(rat)
   })
+
+  mean_g <- lapply(1:length(model_list), function(x) {
+    reference_name <- as.character(pairs[x, "reference"])
+    sample_name <- as.character(pairs[x, "samples"])
+    model <- model_list[[x]]
+    return(exp(model$interval["mean_g"]))
+  })
+
   pairs$scaling <- unlist(scaling_ll)
+  pairs$mean_g <- unlist(mean_g)
 
   # Plot the normalisation graphs relative to the average_reference
   cat("|| Plot pairs with average reference\n")
@@ -267,7 +283,11 @@ RunNorm <- function(mat_path,
       ll <- list("model" = model, "mat_append" = mat_append, "sample_name" = sample_name, "reference_name" = reference_name, "saving_path" = saving_path, "n_pop" = model$n_pop)
       return(ll)
     })
-    BiocParallel::bplapply(plot_l, plot_pair_model, BPPARAM = BiocParam)
+    if (!is.null(BiocParam)) {
+      BiocParallel::bplapply(plot_l, plot_pair_model, BPPARAM = BiocParam)
+    }else{
+      lapply(plot_l, plot_pair_model)
+    }
   }
   # Save the scaling factor to file "filling in the design table":
   norm_mat <- mat[, rownames(design)]
@@ -275,6 +295,7 @@ RunNorm <- function(mat_path,
   # Save the normalised table
   design_scaling <- design
   design_scaling$scaling <- pairs$scaling
+  design_scaling$mean_g <- pairs$mean_g
   if (Save_results == TRUE) {
     if (is.character(mat_path)) {
       file_name <- tools::file_path_sans_ext(mat_path)
