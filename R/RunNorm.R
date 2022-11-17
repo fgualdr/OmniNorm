@@ -312,6 +312,6 @@ RunNorm <- function(mat_path,
 
   Result <- list(scaling_factors = design_scaling, ori_mat = mat[, rownames(design)], norm_mat = norm_mat, model_list = model_list)
   # Save to oath the scaled tables as "Norm_table"
-  class(obj.out) <- "GMSN"
+  class(Result) <- "GMSN"
   return(Result)
 }
