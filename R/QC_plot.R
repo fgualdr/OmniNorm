@@ -112,99 +112,89 @@ QC_plot <- function(gnmsn_obj,
   # column-centeres effects
   # compute a vst with design ~1 exploiting DESeq2 w/o replicate
   cat("|| VST\n")
-  mat_vsts <- lapply(1:length(list_tables), function(y) {
-    x <- list_tables[[y]]
-    x <- x[rowMeans(x) > 0, ]
-    if (max(x) > .Machine$integer.max) {
-      x <- x * ((.Machine$integer.max - 1) / max(x))
+  mat_vsts = lapply(1:length(list_tables),function(y){
+    x = list_tables[[y]]
+    x = x[rowMeans(x) >0,]
+    if(max(x) > .Machine$integer.max){
+      x = x*((.Machine$integer.max-1)/max(x))
     }
-    vs_mat <- VarianceStabilized(x)
+    vs_mat = VarianceStabilized(x)
     return(vs_mat)
   })
-  names(mat_vsts) <- names(list_tables)
-  pca_vsts <- lapply(mat_vsts, function(x) {
-    rowwise <- t(scale(t(x), scale = FALSE, center = TRUE))
+  names(mat_vsts) = names(list_tables)
+  pca_vsts = lapply(mat_vsts,function(x){   
+    rowwise = t(scale(t(x),scale=FALSE,center=TRUE))
     # Add the selection of top varying genes:
     set.seed(123456)
-    rpca <- FactoMineR::PCA(rowwise, graph = FALSE, scale.unit = FALSE, ncp = ncol(rowwise))
+    rpca = FactoMineR::PCA(rowwise, graph = FALSE,scale.unit = FALSE,ncp = ncol(rowwise))
     return(rpca)
   })
-  names(pca_vsts) <- names(mat_vsts)
+  names(pca_vsts) = names(mat_vsts)
   # Assemble a grip plot for ggplot
-  if (is.character(design_path)) {
-    design <- read.delim(design_path, sep = "\t", stringsAsFactors = FALSE)
-  } else {
-    design <- as.data.frame(as.matrix(design_path), stringsAsFactors = FALSE)
-  }
-  
-
+  if(is.character(design_path)) {design = read.delim(design_path,sep="\t",stringsAsFactors=FALSE)}else{design=as.data.frame(as.matrix(design_path),stringsAsFactors=FALSE)}
   design <- within(design, Condition <- data.frame(do.call("rbind", strsplit(as.character(design$Sample_Condition), "_", fixed = TRUE) )))
-
-  design <- design[order(design[, "Condition"][, tail(colnames(design[, "Condition"]), n = 1)]), ]
-  design <- design[order(design[, "Condition"][, head(colnames(design[, "Condition"]), n = 1)]), ]
-  w <- which(design$Sample_ID %in% colnames(ori_mat))
-  design <- design[w, ]
-  colnames(design) <- gsub("\\.", "", colnames(design))
-  design <- as.data.frame(as.matrix(design), stringsAsFactors = FALSE)
-  cn <- c(colnames(design)[grep("^Condition", colnames(design))], colnames(design)[grep("Replicate", colnames(design))])
-  for (col in rev(cn)) {
-    design <- design[order(design[, col]), ]
-  }
-  rownames(design) <- paste0(design[rownames(design), ]$Sample_Condition, "_", design[rownames(design), ]$Sample_Replicate)
+  design = design[order( design[,"Condition"][,tail(colnames(design[,"Condition"]),n=1)]),]
+  design = design[order( design[,"Condition"][,head(colnames(design[,"Condition"]),n=1)]),]
+  w = which(design$Sample_ID %in% colnames(ori_mat))
+  design=design[w,]
+  colnames(design) = gsub("\\.","",colnames(design))
+  design = as.data.frame(as.matrix(design),stringsAsFactors=FALSE)
+  cn = c(colnames(design)[grep("^Condition",colnames(design))],colnames(design)[grep("Replicate",colnames(design))])
+  for(col in rev(cn)){
+      design = design[order(design[,col]),]
+    }
+  rownames(design) = paste0(design[rownames(design),]$Sample_Condition,"_",design[rownames(design),]$Sample_Replicate)
   # Annotation
-  d <- design[, c(grep("^Condition", colnames(design)), c(grep("Sample_Replicate", colnames(design))))]
-  d <- as.matrix(d)
-  colnames(d) <- gsub("\\.", "", colnames(d))
-  col_list <- apply(d, 2, function(x) {
-    cc <- circlize::rand_color(length(unique(x)), hue = NULL, luminosity = "bright")
-    names(cc) <- unique(x)
+  d = design[,c(grep("^Condition",colnames(design)),c(grep("Sample_Replicate",colnames(design))))]
+  d = as.matrix(d)
+  colnames(d) = gsub("\\.","",colnames(d))
+  col_list = apply(d,2,function(x){
+    cc = circlize::rand_color(length(unique(x)), hue = NULL, luminosity = "bright")
+    names(cc) = unique(x)
     return(cc)
   })
 
-  dd <- 100 / nrow(d)
-  row_ha <- ComplexHeatmap::HeatmapAnnotation(df = d, col = col_list, annotation_name_gp = grid::gpar(fontsize = 2), border = TRUE, simple_anno_size = grid::unit(dd, "cm"), show_legend = FALSE)
+  dd = 100/nrow(d)
+  row_ha = ComplexHeatmap::HeatmapAnnotation(df = d, col = col_list ,annotation_name_gp= grid::gpar(fontsize = 2),border=TRUE,simple_anno_size = grid::unit(dd, "cm"),show_legend=FALSE )
 
-  # Plots:
-  pp_comp <- lapply(1:length(pca_vsts), function(ii) {
-    x <- pca_vsts[[ii]]
-    eig <- x$eig[1:10, ]
-    column_ha <- ComplexHeatmap::rowAnnotation(PCA = ComplexHeatmap::anno_barplot(eig[, 2]))
-    ppc <- x$var$coord[(design$Sample_ID), 1:10]
-    # add dimension of dots - redundant:
-    ppc <- ppc[design$Sample_ID, ]
-    rownames(ppc) <- rownames(design)
-    ppc_size <- abs(ppc)
-    ppc_size <- abs(ppc)
-    ppc_size <- sqrt(ppc_size / pi)
-    ppc_size <- ppc_size / max(ppc_size)
-    write.table(ppc, paste0(save, names(pca_vsts)[ii], "_VST_all_PCA.txt"), sep = "\t", col.names = NA)
+  # Plots: 
+  pp_comp = lapply(1:length(pca_vsts),function(ii){   
+    x= pca_vsts[[ii]]
+    eig = x$eig[1:10,]
+    column_ha = ComplexHeatmap::rowAnnotation(PCA = ComplexHeatmap::anno_barplot(eig[,2]))
+    ppc = x$var$coord[(design$Sample_ID),1:10]
+    # add dimension of dots - redundant:  
+    ppc = ppc[design$Sample_ID,]
+    rownames(ppc) = rownames(design)
+    ppc_size = abs(ppc)
+    ppc_size = abs(ppc)
+    ppc_size = sqrt(ppc_size/pi)
+    ppc_size = ppc_size/max(ppc_size) 
+    write.table(ppc,paste0(save,names(pca_vsts)[ii],"_VST_all_PCA.txt"),sep="\t",col.names=NA)
     ##
-    ppc <- t(ppc)
-    ppc_size <- t(ppc_size)
+    ppc = t(ppc)
+    ppc_size = t(ppc_size)
     ##
-    col_pal <- c("#1127CC", "white", "#FFB800")
-    col_fun <- circlize::colorRamp2(c(min(ppc), 0, max(ppc)), col_pal)
-    PCA <- ComplexHeatmap::Heatmap(ppc,
-      width = ncol(ppc_size) * grid::unit(dd, "cm"),
-      height = nrow(ppc_size) * grid::unit(dd, "cm"),
-      col = col_fun, rect_gp = grid::gpar(type = "none"),
-      cell_fun = function(j, i, x, y, width, height, fill) {
-        grid::grid.rect(x = x, y = y, width = width, height = height, gp = grid::gpar(col = NA, fill = NA))
-        grid::grid.circle(
-          x = x, y = y, r = abs(ppc_size[i, j]) / 2 * grid::unit(dd, "cm"),
-          gp = grid::gpar(fill = col_fun(ppc[i, j]), col = NA)
-        )
-      },
-      cluster_rows = FALSE, cluster_columns = FALSE, row_dend_reorder = FALSE, column_dend_reorder = FALSE,
-      row_names_gp = grid::gpar(fontsize = 1.5),
-      column_names_gp = grid::gpar(fontsize = 1.5),
-      row_names_side = "left", border = TRUE, top_annotation = row_ha, right_anno = column_ha,
-      heatmap_legend_param = list(title = "PC score", just = c("right", "top")), show_heatmap_legend = FALSE,
-      show_row_names = TRUE, show_column_names = TRUE
-    )
-
-    pdf(paste0(save, names(pca_vsts)[ii], "_VST_all_PCA.pdf"), width = 50, height = 25)
-    ComplexHeatmap::draw(PCA, heatmap_legend_side = "bottom")
+    col_pal = c("#1127CC","white","#FFB800")
+    col_fun = circlize::colorRamp2(c(min(ppc),0,max(ppc)),col_pal) 
+    PCA = ComplexHeatmap::Heatmap(  ppc,
+                        width = ncol(ppc_size)*grid::unit(dd, "cm"), 
+                        height = nrow(ppc_size)*grid::unit(dd, "cm"),
+                        col = col_fun, rect_gp = grid::gpar(type = "none"), 
+                        cell_fun = function(j, i, x, y, width, height, fill) {
+                            grid::grid.rect(x = x, y = y, width = width, height = height, gp = grid::gpar(col = NA, fill = NA))
+                            grid::grid.circle(x = x, y = y, r = abs(ppc_size[i, j])/2 * grid::unit(dd, "cm"), 
+                            gp = grid::gpar(fill = col_fun(ppc[i, j]), col = NA))
+                        }, 
+                        cluster_rows = FALSE, cluster_columns = FALSE,row_dend_reorder = FALSE,column_dend_reorder=FALSE,
+                        row_names_gp = grid::gpar(fontsize = 3),
+                        column_names_gp = grid::gpar(fontsize = 3),
+                        row_names_side = "left",border=TRUE,top_annotation = row_ha,right_anno=column_ha,
+                        heatmap_legend_param = list(title = "PC score",just = c("right", "top")),show_heatmap_legend=FALSE,
+                        show_row_names = TRUE, show_column_names = TRUE) 
+    
+    pdf(paste0(save,names(pca_vsts)[ii],"_VST_all_PCA.pdf") , width=50, height=25)
+        ComplexHeatmap::draw(PCA,heatmap_legend_side = "bottom")
     dev.off()
   })
 }
