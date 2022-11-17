@@ -38,7 +38,7 @@ QC_plot <- function(gnmsn_obj,
                     design_path,
                     custom_table = NULL,
                     saving_path = NULL,
-                    norm_methods = c("quantile_normalisation", "median_of_ratios_normalization", "uqua", "tmm")) {
+                    norm_methods = "all") {
   if (!is.null(saving_path)) {
     save <- paste0(saving_path, "/Norm_quality/")
     dir.create(save)
@@ -136,7 +136,10 @@ QC_plot <- function(gnmsn_obj,
   } else {
     design <- as.data.frame(as.matrix(design_path), stringsAsFactors = FALSE)
   }
-  design <- within(design, Condition <- data.frame(do.call("rbind", strsplit(as.character(.data$Sample_Condition), "_", fixed = TRUE))))
+  
+
+  design <- within(design, Condition <- data.frame(do.call("rbind", strsplit(as.character(design$Sample_Condition), "_", fixed = TRUE) )))
+
   design <- design[order(design[, "Condition"][, tail(colnames(design[, "Condition"]), n = 1)]), ]
   design <- design[order(design[, "Condition"][, head(colnames(design[, "Condition"]), n = 1)]), ]
   w <- which(design$Sample_ID %in% colnames(ori_mat))
