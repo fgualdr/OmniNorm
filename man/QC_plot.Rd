@@ -9,8 +9,7 @@ QC_plot(
   design_path,
   custom_table = NULL,
   saving_path = NULL,
-  norm_methods = c("quantile_normalisation", "median_of_ratios_normalization", "uqua",
-    "tmm")
+  norm_methods = "all"
 )
 }
 \arguments{
