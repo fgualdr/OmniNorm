@@ -158,13 +158,17 @@ QC_plot <- function(gnmsn_obj,
     return(cc)
   })
 
-  dd <- 100 / nrow(d)
+  dd <- 15 / max(dim(d))
   row_ha <- ComplexHeatmap::HeatmapAnnotation(df = d, col = col_list, annotation_name_gp = grid::gpar(fontsize = 2), border = TRUE, simple_anno_size = grid::unit(dd, "cm"), show_legend = FALSE)
 
   # Plots:
   pp_comp <- lapply(1:length(pca_vsts), function(ii) {
     x <- pca_vsts[[ii]]
-    eig <- x$eig[1:10, ]
+    if(dim(x$eig)[1]<=10){
+      eig <- x$eig
+    }else{
+      eig <- x$eig[1:10, ]
+    }
     column_ha <- ComplexHeatmap::rowAnnotation(PCA = ComplexHeatmap::anno_barplot(eig[, 2]))
     ppc <- x$var$coord[(design$Sample_ID), 1:10]
     # add dimension of dots - redundant:
@@ -201,7 +205,7 @@ QC_plot <- function(gnmsn_obj,
     )
 
     pdf(paste0(save, names(pca_vsts)[ii], "_VST_all_PCA.pdf"), width = 50, height = 25)
-    ComplexHeatmap::draw(PCA, heatmap_legend_side = "bottom")
+      ComplexHeatmap::draw(PCA, heatmap_legend_side = "bottom")
     dev.off()
   })
 }
