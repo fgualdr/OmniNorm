@@ -170,7 +170,8 @@ QC_plot <- function(gnmsn_obj,
       eig <- x$eig[1:10, ]
     }
     column_ha <- ComplexHeatmap::rowAnnotation(PCA = ComplexHeatmap::anno_barplot(eig[, 2]))
-    ppc <- x$var$coord[(design$Sample_ID), 1:10]
+    ppc <- x$var$coord[(design$Sample_ID), 1:dim(eig)[1]]
+
     # add dimension of dots - redundant:
     ppc <- ppc[design$Sample_ID, ]
     rownames(ppc) <- rownames(design)
