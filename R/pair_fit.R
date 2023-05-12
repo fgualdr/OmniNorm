@@ -83,6 +83,7 @@ pair_fit <- function(ll) {
     sigmas[j] <- f$estimate["sd"]
   }
   global_dens <- d.mixedSN(xx, model$pii, model$mu, model$sigma2, model$shape)
+  # Define the freq_sum as the mode of the global distribution
   freq_sum <- xx[which.max(global_dens)]
   # Decorate the model
   model$means <- means
@@ -90,17 +91,26 @@ pair_fit <- function(ll) {
   model$freq <- apply(dens, 2, max)
   model$freq_dist <- abs(modes - freq_sum)
   model$sigma_norm <- sigmas
-  # Select the reference population based on score: i.e. highest frequency and smaller error:
+  # Select the reference population based on score: i.e. 
+  # highest frequency and smaller error:
   # consider that up to 3 populations are possible
+  # We sum 3 scores:
+  # 1 - we give higher score to the population with higher frequency
+  # 2 - we give higher score to the population with smaller distance from the freq_sum which is the mode of the global distribution
+  # if we have one population with freq_dist = 0, then we have a perfect fit and we give a score of 1
+  # 3 - we give higher score to the population with smaller sigma_norm
   score1 <- (model$freq) / (max(model$freq)) # higher the better # min max(model$freq)
   score2 <- max(model$freq_dist) / model$freq_dist # smaller the better
   score2 <- score2 / max(score2)
   # if all freq_dist are 0, then we have a perfect fit
-  if (all(model$freq_dist == 0)) {
-    score2 <- rep(1, length(model$freq_dist))
+  if(length(model$freq_dis)==1){
+    if (model$freq_dist == 0) {
+      score2 <- 1
+    }
   }
   score3 <- max(model$sigma_norm) / model$sigma_norm # smaller the better
   score3 <- score3 / max(score3)
+  # We sum them all up 
   model$score <- score1 + score2 + score3
   # we fix to the mode to get the sd of the best fit normal
   interval <- c(
