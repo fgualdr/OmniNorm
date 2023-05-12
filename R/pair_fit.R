@@ -91,11 +91,13 @@ pair_fit <- function(ll) {
   model$freq_dist <- abs(modes - freq_sum)
   model$sigma_norm <- sigmas
   # Select the reference population based on score: i.e. highest frequency and smaller error:
+  # consider that up to 3 populations are possible
   score1 <- (model$freq) / (max(model$freq)) # higher the better # min max(model$freq)
   score2 <- max(model$freq_dist) / model$freq_dist # smaller the better
   score2 <- score2 / max(score2)
-  if (model$freq_dist == 0) {
-    score2 <- 1
+  # if all freq_dist are 0, then we have a perfect fit
+  if (all(model$freq_dist == 0)) {
+    score2 <- rep(1, length(model$freq_dist))
   }
   score3 <- max(model$sigma_norm) / model$sigma_norm # smaller the better
   score3 <- score3 / max(score3)

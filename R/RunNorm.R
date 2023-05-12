@@ -49,7 +49,7 @@ RunNorm <- function(mat_path,
                     Norm_plot = TRUE,
                     Save_results = TRUE,
                     BiocParam = NULL) {
-  if (is.null(saving_path)) {
+  if (is.null(saving_path) & Save_results == TRUE) {
     stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
   }
 
