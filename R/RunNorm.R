@@ -119,6 +119,8 @@ RunNorm <- function(mat_path,
       } else {
         stop("ERROR: fix_reference must be a vector of Samples_ID all part of the Sample_ID column in the design table")
       }
+    }else{
+      fix_reference = fix_reference[wrev]
     }
   } else {
     cat("Warning : no reference set was specified\n
@@ -127,95 +129,98 @@ RunNorm <- function(mat_path,
       For 100 samples ~5000 fittings are goin to be computed.\n")
     fix_reference <- rownames(design)
   }
-
-  design_ref <- as.data.frame(as.matrix(design[fix_reference, ]), stringsAsFactors = FALSE)
-  mat_sample <- as.data.frame(as.matrix(mat[, rownames(design_ref)]), stringsAsFactors = FALSE)
-  # pair_wise data.frame set up
-  sn <- 1:length(design_ref$Sample_ID)
-  names(sn) <- design_ref$Sample_ID
-  pairs <- t(combn(design_ref$Sample_ID, 2, FUN = NULL, simplify = TRUE))
-  pairs <- as.data.frame(rbind(pairs, pairs[, 2:1]))
-  colnames(pairs) <- c("samples", "reference")
-  pairs$sample_index <- sn[pairs$samples]
-  pairs$reference_index <- sn[pairs$reference]
-  pairs <- pairs[order(pairs$reference_index), ]
-  pairs <- pairs[order(pairs$sample_index), ]
-  rownames(pairs) <- NULL
-  # Select upper_triangle
-  pairs <- pairs[which(pairs$reference_index > pairs$sample_index), ]
-
-  cat(" || Compute Mixture of Skew-Normal Distributions ||\n")
-  if (!is.null(BiocParam)) {
-    model_list <- list()
-    rat_l <- lapply(1:nrow(pairs), function(x) {
-      ratio <- log(mat_sample[, as.character(pairs[x, "reference"])] / mat_sample[, as.character(pairs[x, "samples"])])
-      # Only consider finite values
-      ratio <- ratio[is.finite(ratio)]
-      if (length(ratio) == 0) {
-        cat("ERROR!!!")
-      } # Check!
-      return(list("ratio" = ratio, "n_pop" = n_pop_reference, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x))
+  # Consider that if the reference is only one we skip the reference normalization and we go straigth to the by_sample norm:
+  if(length(fix_reference) > 1){
+    # if multiple reference samples are selected we need to compute the pair-wise skew-normal distribution across them
+    design_ref <- as.data.frame(as.matrix(design[fix_reference, ]), stringsAsFactors = FALSE)
+    mat_sample <- as.data.frame(as.matrix(mat[, rownames(design_ref)]), stringsAsFactors = FALSE)
+    # pair_wise data.frame set up
+    sn <- 1:length(design_ref$Sample_ID)
+    names(sn) <- design_ref$Sample_ID
+    pairs <- t(combn(design_ref$Sample_ID, 2, FUN = NULL, simplify = TRUE))
+    pairs <- as.data.frame(rbind(pairs, pairs[, 2:1]))
+    colnames(pairs) <- c("samples", "reference")
+    pairs$sample_index <- sn[pairs$samples]
+    pairs$reference_index <- sn[pairs$reference]
+    pairs <- pairs[order(pairs$reference_index), ]
+    pairs <- pairs[order(pairs$sample_index), ]
+    rownames(pairs) <- NULL
+    # Select upper_triangle
+    pairs <- pairs[which(pairs$reference_index > pairs$sample_index), ]
+    cat(" || Compute Mixture of Skew-Normal Distributions ||\n")
+    if (!is.null(BiocParam)) {
+      model_list <- list()
+      rat_l <- lapply(1:nrow(pairs), function(x) {
+        ratio <- log(mat_sample[, as.character(pairs[x, "reference"])] / mat_sample[, as.character(pairs[x, "samples"])])
+        # Only consider finite values
+        ratio <- ratio[is.finite(ratio)]
+        if (length(ratio) == 0) {
+          cat("ERROR!!!")
+        } # Check!
+        return(list("ratio" = ratio, "n_pop" = n_pop_reference, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x))
+      })
+      model_list <- tryCatch(
+        {
+          BiocParallel::bplapply(rat_l, pair_fit, BPPARAM = BiocParam)
+        },
+        error = identity
+      )
+    } else {
+      model_list <- list()
+      model_list <- lapply(1:nrow(pairs), function(x) {
+        # get log2-ratio of the selected pair
+        ratio <- log(mat_sample[, as.character(pairs[x, "reference"])] / mat_sample[, as.character(pairs[x, "samples"])])
+        # Only consider finite values
+        ratio <- ratio[is.finite(ratio)]
+        ll <- list("ratio" = ratio, "n_pop" = n_pop_reference, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x)
+        model <- pair_fit(ll)
+        return(model)
+      })
+    }
+    cat("|| Computing models Done\n")
+    # Scaling and create Av. Sample, Append to mat[,rownames(design)]
+    pairs$scaling <- NA
+    scaling_ll <- lapply(1:length(model_list), function(x) {
+      reference_name <- as.character(pairs[x, "reference"])
+      sample_name <- as.character(pairs[x, "samples"])
+      model <- model_list[[x]]
+      ww <- which(log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) >= model$interval["lb"] &
+        log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) <= model$interval["ub"])
+      mm <- mat[ww, c(sample_name, reference_name)]
+      pseudo_cov <- colSums(mm)
+      rat <- pseudo_cov[2] / pseudo_cov[1]
+      names(rat) <- x
+      return(rat)
     })
-    model_list <- tryCatch(
-      {
-        BiocParallel::bplapply(rat_l, pair_fit, BPPARAM = BiocParam)
-      },
-      error = identity
-    )
+    pairs$scaling <- unlist(scaling_ll)
+    pairs_add <- pairs[, c(2, 1, 4, 3, 5)]
+    colnames(pairs_add) <- colnames(pairs)
+    pairs_add$scaling <- 1 / pairs$scaling
+    pairs_add <- pairs_add[order(pairs_add$reference_index), ]
+    pairs_add <- pairs_add[order(pairs_add$sample_index), ]
+    self <- cbind(names(sn), names(sn), 1:length(sn), 1:length(sn), rep(1, length(sn)))
+    colnames(self) <- colnames(pairs_add)
+    pairs_add <- rbind(pairs_add, self)
+    pairscombo <- rbind(pairs, pairs_add)
+    pairscombo <- pairscombo[order(pairscombo$reference_index), ]
+    pairscombo <- pairscombo[order(pairscombo$sample_index), ]
+    pairscombo <- data.table::as.data.table(pairscombo)
+    pairscombo$scaling <- as.numeric(as.character(pairscombo$scaling))
+    pairscombo <- split(pairscombo, pairscombo$samples)
+    pairscombo <- lapply(pairscombo, function(x) {
+      mean(x$scaling)
+    })
+    pairscombo <- data.table::as.data.table(cbind(names(pairscombo), unlist(pairscombo)))
+    colnames(pairscombo) <- c("samples", "av_scaling")
+    mm <- mat[, as.character(pairscombo$samples)]
+    mat_append <- mat[, rownames(design)]
+    # Add the average reference to the mat_append
+    mat_append$average_reference <- rowMeans(as.matrix(mm) %*% diag(pairscombo$av_scaling))
   } else {
-    model_list <- list()
-    model_list <- lapply(1:nrow(pairs), function(x) {
-      # get log2-ratio of the selected pair
-      ratio <- log(mat_sample[, as.character(pairs[x, "reference"])] / mat_sample[, as.character(pairs[x, "samples"])])
-      # Only consider finite values
-      ratio <- ratio[is.finite(ratio)]
-      ll <- list("ratio" = ratio, "n_pop" = n_pop_reference, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x)
-      model <- pair_fit(ll)
-      return(model)
-    })
+    # if fix_reference == 1 we want to scale it to one reference sample only therefore we set average_reference to the fix_reference sample
+    mat_append <- mat[, rownames(design)]
+    mat_append$average_reference <- mat[,fix_reference]
   }
-
-  cat("|| Computing models Done\n")
-  # Scaling and create Av. Sample, Append to mat[,rownames(design)]
-  pairs$scaling <- NA
-  scaling_ll <- lapply(1:length(model_list), function(x) {
-    reference_name <- as.character(pairs[x, "reference"])
-    sample_name <- as.character(pairs[x, "samples"])
-    model <- model_list[[x]]
-    ww <- which(log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) >= model$interval["lb"] &
-      log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) <= model$interval["ub"])
-    mm <- mat[ww, c(sample_name, reference_name)]
-    pseudo_cov <- colSums(mm)
-    rat <- pseudo_cov[2] / pseudo_cov[1]
-    names(rat) <- x
-    return(rat)
-  })
-
-  pairs$scaling <- unlist(scaling_ll)
-  pairs_add <- pairs[, c(2, 1, 4, 3, 5)]
-  colnames(pairs_add) <- colnames(pairs)
-  pairs_add$scaling <- 1 / pairs$scaling
-  pairs_add <- pairs_add[order(pairs_add$reference_index), ]
-  pairs_add <- pairs_add[order(pairs_add$sample_index), ]
-  self <- cbind(names(sn), names(sn), 1:length(sn), 1:length(sn), rep(1, length(sn)))
-  colnames(self) <- colnames(pairs_add)
-  pairs_add <- rbind(pairs_add, self)
-  pairscombo <- rbind(pairs, pairs_add)
-  pairscombo <- pairscombo[order(pairscombo$reference_index), ]
-  pairscombo <- pairscombo[order(pairscombo$sample_index), ]
-  pairscombo <- data.table::as.data.table(pairscombo)
-  pairscombo$scaling <- as.numeric(as.character(pairscombo$scaling))
-
-  pairscombo <- split(pairscombo, pairscombo$samples)
-  pairscombo <- lapply(pairscombo, function(x) {
-    mean(x$scaling)
-  })
-  pairscombo <- data.table::as.data.table(cbind(names(pairscombo), unlist(pairscombo)))
-  colnames(pairscombo) <- c("samples", "av_scaling")
-
-  mat_append <- mat[, rownames(design)]
-  mm <- mat[, as.character(pairscombo$samples)]
-  mat_append$average_reference <- rowMeans(as.matrix(mm) %*% diag(pairscombo$av_scaling))
   # Compute Parallel model fit pairwise every sample to the mean_reference
   # pair_wise data.frame set up
   sn <- 1:length(design$Sample_ID)
