@@ -216,19 +216,27 @@ RunNorm <- function(mat_path,
     mat_append <- mat[, rownames(design)]
     # Add the average reference to the mat_append
     mat_append$average_reference <- rowMeans(as.matrix(mm) %*% diag(pairscombo$av_scaling))
+    # Compute Parallel model fit pairwise every sample to the mean_reference
+    # pair_wise data.frame set up
+    sn <- 1:length(design$Sample_ID)
+    names(sn) <- design$Sample_ID
+    pairs <- as.data.frame(cbind(design$Sample_ID, rep("average_reference", length(sn))))
+    colnames(pairs) <- c("samples", "reference")
+    rownames(pairs) <- NULL
+    cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
   } else {
     # if fix_reference == 1 we want to scale it to one reference sample only therefore we set average_reference to the fix_reference sample
     mat_append <- mat[, rownames(design)]
-    mat_append$average_reference <- mat[,fix_reference]
+    # Compute Parallel model fit pairwise every sample to the mean_reference
+    # pair_wise data.frame set up
+    samp_left = design$Sample_ID[!grepl(fix_reference,design$Sample_ID)]
+    sn <- 1:length(samp_left)
+    names(sn) <- samp_left
+    pairs <- as.data.frame(cbind(samp_left, rep(fix_reference, length(sn))))
+    colnames(pairs) <- c("samples", "reference")
+    rownames(pairs) <- NULL
+    cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
   }
-  # Compute Parallel model fit pairwise every sample to the mean_reference
-  # pair_wise data.frame set up
-  sn <- 1:length(design$Sample_ID)
-  names(sn) <- design$Sample_ID
-  pairs <- as.data.frame(cbind(design$Sample_ID, rep("average_reference", length(sn))))
-  colnames(pairs) <- c("samples", "reference")
-  rownames(pairs) <- NULL
-  cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
 
   if (!is.null(BiocParam)) {
     model_list <- list()
@@ -284,6 +292,7 @@ RunNorm <- function(mat_path,
   cat("|| Plot pairs with average reference\n")
   if (Norm_plot == TRUE) {
     plot_l <- lapply(1:length(model_list), function(x) {
+
       reference_name <- as.character(pairs[x, "reference"])
       sample_name <- as.character(pairs[x, "samples"])
       model <- model_list[[x]]
@@ -296,9 +305,13 @@ RunNorm <- function(mat_path,
       lapply(plot_l, plot_pair_model)
     }
   }
+
+  # if fix_reference == 1 we add "1" to the fix_reference sample
+  pairs = rbind(pairs, c(fix_reference, fix_reference, 1, 1))
+
   # Save the scaling factor to file "filling in the design table":
   norm_mat <- mat[, rownames(design)]
-  norm_mat <- sweep(norm_mat[, pairs$samples], 2, pairs[, "scaling"], "*")
+  norm_mat <- sweep(norm_mat[, pairs$samples], 2, as.numeric(as.character(pairs[, "scaling"])), "*")
   # Save the normalised table
   design_scaling <- design
   design_scaling$scaling <- pairs$scaling
