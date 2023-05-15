@@ -224,7 +224,9 @@ RunNorm <- function(mat_path,
     colnames(pairs) <- c("samples", "reference")
     rownames(pairs) <- NULL
     cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
+
   } else {
+
     # if fix_reference == 1 we want to scale it to one reference sample only therefore we set average_reference to the fix_reference sample
     mat_append <- mat[, rownames(design)]
     # Compute Parallel model fit pairwise every sample to the mean_reference
@@ -236,6 +238,7 @@ RunNorm <- function(mat_path,
     colnames(pairs) <- c("samples", "reference")
     rownames(pairs) <- NULL
     cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
+
   }
 
   if (!is.null(BiocParam)) {
@@ -307,8 +310,10 @@ RunNorm <- function(mat_path,
   }
 
   # if fix_reference == 1 we add "1" to the fix_reference sample
-  pairs = rbind(pairs, c(fix_reference, fix_reference, 1, 1))
-
+  if(length(fix_reference) == 1){
+    pairs = rbind(pairs, c(fix_reference, fix_reference, 1, 1))
+  }
+  
   # Save the scaling factor to file "filling in the design table":
   norm_mat <- mat[, rownames(design)]
   norm_mat <- sweep(norm_mat[, pairs$samples], 2, as.numeric(as.character(pairs[, "scaling"])), "*")
