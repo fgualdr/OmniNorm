@@ -3,7 +3,7 @@
 #' @param ll List composed by: "ratio" for the selected pair, "n_pop" i.e. n° of expected populations,
 #'          "sigma_times" n° of sigmas to select invariant observations, "dist_family" distribution famly see mixsmsn, ...
 #'
-#' @returns Return EM algorithm output for FM-SMSN distributions with additional fields: n_pop,means,modes,fre  q,freq_dist,sigma_norm
+#' @returns Return  EM algorithm output for FM-SMSN distributions with additional fields: n_pop,means,modes,fre  q,freq_dist,sigma_norm
 #' @export
 #'
 #' @import mixsmsn
