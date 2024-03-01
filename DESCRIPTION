@@ -7,28 +7,26 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Depends: 
-    fitdistrplus,
-    mixsmsn
+    fitdistrplus (>= 1.1.0),
+    mixsmsn (>= 0.1.0)
 Imports: 
     R (>= 4.2.2),
-    BiocParallel,
-    circlize,
-    ComplexHeatmap,
-    data.table,
-    dplyr,
-    edgeR,
+    BiocParallel (>= 1.28.0),
+    circlize (>= 0.4.13),
+    ComplexHeatmap (>= 2.10.0),
+    data.table (>= 1.14.2),
+    dplyr (>= 1.0.7),
+    edgeR (>= 3.34.0),
     FactoMineR (>= 2.4),
-    emmeans (>= 1.10.0),
-    estimability (>= 1.4.1),
-    graphics,
-    grDevices,
-    grid,
-    methods,
-    rlang,
-    stats,
-    tibble,
-    tools,
-    utils
+    graphics (>= 4.2.2),
+    grDevices (>= 4.2.2),
+    grid (>= 4.2.2),
+    methods (>= 4.2.2),
+    rlang (>= 0.4.11),
+    stats (>= 4.2.2),
+    tibble (>= 3.1.3),
+    tools (>= 4.2.2),
+    utils (>= 4.2.2),
 Encoding: UTF-8
 Language: Authors@R
 Roxygen: list(markdown = TRUE)
