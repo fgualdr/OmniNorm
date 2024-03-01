@@ -7,10 +7,10 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Depends: 
+    R(>= 4.3.0),
     fitdistrplus (>= 1.1.0),
     mixsmsn (>= 0.1.0)
-Imports: 
-    R (>= 4.3.0),
+Imports:
     BiocParallel (>= 1.28.0),
     circlize (>= 0.4.13),
     ComplexHeatmap (>= 2.10.0),
