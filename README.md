@@ -13,7 +13,13 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 [![R-CMD-check](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of `GeneralNormalizer` is to …
+GeneralNormalizer is an R library that utilizes a mixed Skewed distribution to normalize allegedly any numerical (matrix-arranged) dataset. It has been developed to address the normalization of heavily unbalanced distributions where classical approaches such as median, quantile, etc., normalization fail.
+
+The library has been tested on multi-omics datasets including RNA-seq, ChIP-seq, ATAC-seq, and proteomic-based datasets, as well as heavily degraded assays such as CETSA-MS.
+
+The fundamental idea behind GeneralNormalizer is that it is not always accurate to assume that given a perturbation, the number of changing observations is the minority, and that the number of up or down changes is equally distributed. This observation implies that instead of symmetrically distributed changes, the distributions of changes will display various degrees of skewness, with the unperturbed population being the only one with a quasi-normal distribution.
+
+A more detailed description will soon be added to the repository, as a short article is under preparation.
 
 ## Installation instructions
 
