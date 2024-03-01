@@ -10,13 +10,16 @@ Depends:
     fitdistrplus,
     mixsmsn
 Imports: 
+    R (>= 4.2.2),
     BiocParallel,
     circlize,
     ComplexHeatmap,
     data.table,
     dplyr,
     edgeR,
-    FactoMineR,
+    FactoMineR (>= 2.4),
+    emmeans (>= 1.10.0),
+    estimability (>= 1.4.1),
     graphics,
     grDevices,
     grid,
