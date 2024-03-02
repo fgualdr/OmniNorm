@@ -7,7 +7,7 @@ Authors@R:
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Depends: 
-    R(>= 4.3.0),
+    R(>= 4.2.0),
     fitdistrplus (>= 1.1.0),
     mixsmsn (>= 0.1.0)
 Imports:
