@@ -11,7 +11,7 @@ pulls](https://img.shields.io/github/issues-pr/fgualdr/GeneralNormalizer)](https
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check-bioc](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml)
 [![R-CMD-check](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
+<!-- badges: end --> 
 
 GeneralNormalizer is an R library that utilizes a mixed Skewed distribution to normalize allegedly any numerical (matrix-arranged) dataset. It has been developed to address the normalization of heavily unbalanced distributions where classical approaches such as median, quantile, etc., normalization fail.
 

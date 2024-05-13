@@ -47,7 +47,7 @@ pair_fit <- function(ll) {
     model_search <- mixsmsn::smsn.search(ratio, 3,
       g.min = 1, g.max = 3,
       family = family, criteria = "bic",
-      error = 0.00001, iter.max = 100,
+      error = 0.00001, iter.max = 1000,
       calc.im = FALSE, uni.Gama = FALSE, kmeans.param = NULL
     )
     n_pop <- length(unique(model_search$best.model$group))

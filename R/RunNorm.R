@@ -56,9 +56,11 @@ RunNorm <- function(mat_path,
   if (n_pop_reference > 3 | is.null(n_pop_reference)) {
     stop("n_pop_reference must be between 1 and 3")
   }
-
-  if (n_pop > 3 | is.null(n_pop)) {
-    stop("n_pop must be between 1 and 3")
+  # if n_pop is not null it must be between 1 and 3
+  if(!is.null(n_pop)){
+    if (n_pop > 3) {
+      stop("n_pop must be between 1 and 3")
+    }
   }
 
   # Import the tables
