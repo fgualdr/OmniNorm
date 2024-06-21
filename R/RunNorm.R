@@ -319,11 +319,12 @@ RunNorm <- function(mat_path,
     pairs = rbind(pairs, c(fix_reference, fix_reference, 1, 1))
   }
   
-  # Save the scaling factor to file "filling in the design table":
-  norm_mat <- mat[, rownames(design)]
-  norm_mat <- sweep(norm_mat[, pairs$samples], 2, as.numeric(as.character(pairs[, "scaling"])), "*")
+  cat("Save the scaling factor to file filling in the design table\n")
+
+  #norm_mat <- mat[, rownames(design)]
+  norm_mat <- sweep(mat[, pairs$samples], 2, as.numeric(as.character(pairs$scaling)), "*")
   # Save the normalised table
-  design_scaling <- design
+  design_scaling <- design[pairs$samples,]
   design_scaling$scaling <- pairs$scaling
   design_scaling$mean_g <- pairs$mean_g
 
