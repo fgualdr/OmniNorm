@@ -17,16 +17,16 @@ However, **real-world data rarely follows these assumptions**. Perturbations may
 
 ---
 
-## 📈 Applications
+## 🧪 Applications
 
 OmniNorm has been tested and validated on a wide range of omics datasets, including:
 
-- 🧬 **Bulk RNA-seq**
-- 🧫 **Single-cell RNA-seq (scRNA-seq)**
-- 🧪 **ChIP-seq**
-- 🔬 **ATAC-seq**
-- 🧠 **Proteomics**
-- 🧊 **CETSA-MS** and other degraded or noisy assays
+- 🧬 **Bulk RNA-seq** – transcriptional profiling
+- 🧫 **Single-cell techniques** – sparse and noisy
+- 🧬 **ChIP-seq** – chromatin-bound protein occupancy
+- 🧬 **ATAC-seq** – chromatin accessibility profiling
+- 🧊 **Proteomics** – protein abundance quantification
+- 🧊 **CETSA-MS** – thermal shift-based proteomics under degradation
 
 ---
 
