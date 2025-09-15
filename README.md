@@ -1,5 +1,5 @@
 
-# GeneralNormalizer
+# OmniNorm
 
 <!-- badges: start -->
 
