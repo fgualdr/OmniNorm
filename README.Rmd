@@ -2,23 +2,23 @@
 output: github_document
 ---
 
-# GeneralNormalizer
+# OmniNorm
 
 <!-- badges: start -->
-[![GitHub issues](https://img.shields.io/github/issues/fgualdr/GeneralNormalizer)](https://github.com/fgualdr/GeneralNormalizer/issues)
-[![GitHub pulls](https://img.shields.io/github/issues-pr/fgualdr/GeneralNormalizer)](https://github.com/fgualdr/GeneralNormalizer/pulls)
+[![GitHub issues](https://img.shields.io/github/issues/fgualdr/OmniNorm)](https://github.com/fgualdr/OmniNorm/issues)
+[![GitHub pulls](https://img.shields.io/github/issues-pr/fgualdr/OmniNorm)](https://github.com/fgualdr/OmniNorm/pulls)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check-bioc](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check-bioc.yaml)
-[![R-CMD-check](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/GeneralNormalizer/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check-bioc](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check-bioc.yaml/badge.svg)](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check-bioc.yaml)
+[![R-CMD-check](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of `GeneralNormalizer` is to ...
+The goal of `OmniNorm` is to ...
 
 ## Installation instructions
 
-Get the latest stable `R` release from [CRAN](http://cran.r-project.org/). Then install `GeneralNormalizer` using devtool:
+Get the latest stable `R` release from [CRAN](http://cran.r-project.org/). Then install `OmniNorm` using devtool:
 
 ```{r 'install', eval = FALSE}
 require(devtools)
-install_github("fgualdr/GeneralNormalizer")
+install_github("fgualdr/OmniNorm")
 ```
