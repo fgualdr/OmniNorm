@@ -6,7 +6,7 @@ labels: ''
 assignees: ''
 ---
 
-Please ask questions about how to use `GeneralNormalizer` on the Bioconductor
+Please ask questions about how to use `OmniNorm`
 Support Site at <https://support.bioconductor.org> using the appropriate tag(s)
 including the one for this package.
 
