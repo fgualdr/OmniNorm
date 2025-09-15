@@ -29,5 +29,5 @@ using devtool:
 
 ``` r
 require(devtools)
-install_github("fgualdr/GeneralNormalizer")
+install_github("fgualdr/OmniNorm")
 ```
