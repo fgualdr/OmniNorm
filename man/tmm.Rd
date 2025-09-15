@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{tmm}
 \alias{tmm}
-\title{tmm: Trimmed Mean of M values normalization (Robinson & Oshlack, 2010)}
+\title{tmm}
 \usage{
 tmm(
   datos,
@@ -17,28 +17,27 @@ tmm(
 )
 }
 \arguments{
-\item{datos}{Matrix containing the read counts for each sample.}
+\item{datos}{Numeric matrix of read counts.}
 
-\item{long}{Numeric vector containing the length of the features. If long == 1000, no length correction is applied (no matter the value of parameter lc).}
+\item{long}{Numeric vector of feature lengths.}
 
-\item{lc}{Correction factor for length normalization. This correction is done by dividing the counts vector by (length/1000)^lc.
-If lc = 0, no length correction is applied. By default, lc = 1 for RPKM and lc = 0 for the other methods.}
+\item{lc}{Length correction exponent.}
 
-\item{k}{Counts equal to 0 are changed to k in order to avoid indeterminations when applying logarithms, for instance. By default, k = 0.}
+\item{k}{Replacement for zeros.}
 
-\item{refColumn}{Column to use as reference (only needed for tmm function).}
+\item{refColumn}{Column used as reference.}
 
-\item{logratioTrim}{Amount of trim to use on log-ratios ("M" values) (only needed for tmm function).}
+\item{logratioTrim}{Trim amount for log-ratios.}
 
-\item{sumTrim}{Amount of trim to use on the combined absolute levels ("A" values) (only needed for tmm function).}
+\item{sumTrim}{Trim amount for absolute levels.}
 
-\item{doWeighting}{Logical, whether to compute (asymptotic binomial precision) weights (only needed for tmm function).}
+\item{doWeighting}{Whether to apply binomial weighting.}
 
-\item{Acutoff}{Cutoff on "A" values to use before trimming (only needed for tmm function).}
+\item{Acutoff}{Cutoff for "A" values before trimming.}
 }
 \value{
-a data frame  normalized
+A normalized numeric data frame.
 }
 \description{
-tmm: Trimmed Mean of M values normalization (Robinson & Oshlack, 2010)
+Trimmed Mean of M-values (TMM) normalization with optional length correction.
 }

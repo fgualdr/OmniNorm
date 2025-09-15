@@ -7,11 +7,11 @@
 quantile_normalisation(df)
 }
 \arguments{
-\item{df}{data frame to apply quantile norm}
+\item{df}{A numeric data frame or matrix to normalize.}
 }
 \value{
-a data frame  normalized
+A quantile-normalized data frame.
 }
 \description{
-quantile_normalisation
+Apply quantile normalization to a data frame.
 }

@@ -2,28 +2,27 @@
 % Please edit documentation in R/plot_pair_model.R
 \name{plot_pair_model}
 \alias{plot_pair_model}
-\title{plot_pair_model Plots fitted distributions to the ratios.}
+\title{plot_pair_model}
 \usage{
 plot_pair_model(ll)
 }
 \arguments{
-\item{ll}{List composed by: "ratio" for the selected pair, "n_pop" i.e. n° of expected populations,
-"sigma_times" n° of sigmas to select invariant observations, "dist_family" distribution famly see mixsmsn, ...}
+\item{ll}{A list containing ratio information and parameters, including: "ratio", "n_pop", "sigma_times", "dist_family", and "index".}
 }
 \value{
-Returns automatically pdf saved within "saving_path"/Norm_pair_plots/ of the fitting and QC
+Invisibly returns NULL. Plots are saved to disk under saving_path/Norm_pair_plots/.
 }
 \description{
-plot_pair_model Plots fitted distributions to the ratios.
-}
-\examples{
-\dontrun{
-# Typical usage
-ll <- list(
-  "ratio" = ratio, "n_pop" = n_pop_reference,
-  "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x
-)
-plot_pair_model(ll)
+Plots the fitted distributions and saves diagnostic PNGs of each normalization pair.
+
+This function expects a list with:
+\itemize{
+\item model: a compact GMSNfit object from pair_fit()
+\item mat_append: a matrix or dgCMatrix with at least sample_name and reference_name columns
+\item sample_name: character string
+\item reference_name: character string
+\item saving_path: character string
 }
 
+The function will save a PNG under saving_path/Norm_pair_plots/.
 }

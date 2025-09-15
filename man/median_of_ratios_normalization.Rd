@@ -7,11 +7,11 @@
 median_of_ratios_normalization(data)
 }
 \arguments{
-\item{data}{data frame to apply quantile norm}
+\item{data}{A data frame or matrix of counts.}
 }
 \value{
-a data frame  normalized
+A normalized data frame.
 }
 \description{
-median_of_ratios_normalization
+Median-of-ratios normalization method (as in DESeq2).
 }

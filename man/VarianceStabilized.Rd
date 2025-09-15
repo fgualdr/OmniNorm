@@ -2,16 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{VarianceStabilized}
 \alias{VarianceStabilized}
-\title{Variance stabilisation}
+\title{VarianceStabilized}
 \usage{
 VarianceStabilized(norm_mat)
 }
 \arguments{
-\item{norm_mat}{data frame to apply Variance stabilisation}
+\item{norm_mat}{A numeric matrix to be variance-stabilized.}
 }
 \value{
-Variance stabilized data frame
+A variance-stabilized matrix.
 }
 \description{
-Variance stabilisation
+Applies a variance stabilization transformation to a normalized matrix.
 }

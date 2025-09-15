@@ -1,42 +1,40 @@
-#' RunNorm function to execute the whole normalisation flow.
+#' @title RunNorm
+#' @description Executes the complete normalization pipeline using mixture models fitted to log-ratio distributions between samples.
 #'
-#' @param mat_path path to the matrix (n * m having features i.e. genes, proteins, chipseq peaks in the raws and individual samples in the columns)
-#' @param design_path design matrix describing the samples. design matrix must be composed by:  Sample_ID, Sample_Condition and Sample_Replicate columns (layers in Sample_conditions will be defined by "_" separator)
-#' @param fix_reference vector of Sample_ID names to be used as initial reference for normalisation. If random specified it select randomly 30% of the samples (To be improoved considering global coverage and intensity in order to avoid failed samples) (default NULL)
-#' @param row_name_index column index where to find the rownames of the matrix (default 1)
-#' @param n_pop n° of populations expected (default NULL)
-#' @param n_pop_reference n° of expected populations in the initial within references normalisation (default NULL)
-#' @param saving_path full path where results are saved default to the working directory
-#' @param sigma_times number of sigmas defining lower and upper bounds to include features (i.e. genes, peaks, proteins ,..) considered to be unchanged relative to the mean distribution
-#' @param dist_family distribution family see package mixsmsn (default "Skew.normal")
-#' @param Norm_plot Whether or not to save individual plots during normalisation (defulat TRUE)
-#' @param Save_results whether to save individual plots and results (default TRUE)
-#' @param BiocParam BiocParallel param object to be specified as : "param <- BiocParallel::MulticoreParam(workers=2,progressbar = TRUE)" (default NULL)
+#' @param mat_path Input data matrix. Can be:
+#'   - A file path to a .csv, .tsv, or .txt file with rownames in the first column
+#'   - A dense matrix or data.frame
+#'   - A sparse dgCMatrix object (from the Matrix package)
 #'
-#' @returns Return a list which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
+#' @param row_name_index Integer indicating the column index of rownames in the input file (default = 1). Ignored if input is a matrix or dgCMatrix.
+#' @param design_path Path to the design matrix. Must contain columns: Sample_ID, Sample_Condition, and Sample_Replicate. Layers in conditions are defined by underscores (_).
+#' @param fix_reference Character vector of Sample_IDs to use as normalization reference. Can also be:
+#'   - "random" to randomly select ~30% of samples
+#'   - A numeric fraction (e.g. 0.3) to select top-N by intensity
+#' @param n_pop Number of populations expected in sample-vs-reference fits (default = 1). Set to NULL to auto-detect.
+#' @param n_pop_reference Number of populations for reference-vs-reference fits (default = 1). NULL for auto.
+#' @param saving_path Output directory to save results (required if Save_results = TRUE).
+#' @param sigma_times Multiplier of standard deviation to define invariant interval around the dominant mode (default = 1).
+#' @param dist_family Distribution family name to use for fitting. Passed to mixsmsn (default = "Skew.normal").
+#' @param Norm_plot Logical. Whether to generate and save QC plots (default = TRUE). Large datasets may be subsampled for plotting.
+#' @param Save_results Logical. Whether to save outputs to disk (default = TRUE).
+#' @param BiocParam Optional BiocParallel backend. If NULL, defaults to MulticoreParam(workers = cpus).
+#' @param return_full Optional whether to return full models per
+#' @param cpus Integer. Used if BiocParam is NULL to set number of parallel workers.
+#'
+#' @return A named list with:
+#'   - scaling_factors: a data.frame of computed scaling coefficients
+#'   - norm_mat: a normalized sparse matrix (dgCMatrix)
+#'   - If return_full = TRUE, also includes model_list: compact model fits
+#'
 #' @export
 #'
 #' @import BiocParallel
-#' @importFrom dplyr mutate_all
-#' @importFrom data.table as.data.table
-#' @import tools
-#' @importFrom rlang .data
-#' @import methods
-#'
-#' @examples
-#' \dontrun{
-#' # Typical usage
-#' param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
-#'
-#' Result <- RunNorm(mat,
-#'   deg_design,
-#'   fix_reference = "random",
-#'   row_name_index = 1,
-#'   saving_path = out_dir,
-#'   n_pop = 1, BiocParam = param
-#' )
-#' }
-#'
+#' @importFrom data.table as.data.table data.table := setnames rbindlist CJ
+#' @importFrom tools file_path_sans_ext
+#' @importFrom Matrix colSums rowMeans Diagonal
+
+
 RunNorm <- function(mat_path,
                     design_path,
                     fix_reference = NULL,
@@ -48,299 +46,312 @@ RunNorm <- function(mat_path,
                     dist_family = "Skew.normal",
                     Norm_plot = TRUE,
                     Save_results = TRUE,
-                    BiocParam = NULL) {
-  if (is.null(saving_path) & Save_results == TRUE) {
-    stop("ERROR: to plot the Normalisation pair plots, a path to a general output folder is required")
+                    return_full = FALSE,
+                    BiocParam = NULL,
+                    cpus = 2) {
+
+  ## ---- guards ----
+  if (isTRUE(Save_results) && is.null(saving_path)) {
+    stop("To save plots/results, please provide 'saving_path'.")
   }
-  
-  if(!is.null(n_pop_reference)){
-    if (n_pop_reference > 3) {
-      stop("n_pop must be between 1 and 3")
-    }
+  if (!is.null(n_pop_reference) && n_pop_reference > 3) stop("n_pop_reference must be between 1 and 3.")
+  if (!is.null(n_pop) && n_pop > 3) stop("n_pop must be between 1 and 3.")
+
+  ## ---- ensure BiocParam ----
+  # before creating BPPARAM
+  if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+    RhpcBLASctl::blas_set_num_threads(1L)
+    RhpcBLASctl::omp_set_num_threads(1L)
   }
 
-  # if n_pop is not null it must be between 1 and 3
-  if(!is.null(n_pop)){
-    if (n_pop > 3) {
-      stop("n_pop must be between 1 and 3")
-    }
-  }
-
-  # Import the tables
+  ## ---- import inputs ----
   cat("|| Import matrix\n")
-  # If character is a path, if data.frame just assign
-  if (is.character(mat_path)) {
-    mat <- read.delim(mat_path, sep = "\t", stringsAsFactors = FALSE, row.names = row_name_index)
-  } else {
-    mat <- mat_path
-  }
+  mat <- parse_input_matrix(mat_path, row_name_index = row_name_index)
   cat("|| DONE\n")
-  # Import the Design Table
+
   cat("|| Import Design table\n")
-  if (is.character(design_path)) {
-    design <- read.delim(design_path, sep = "\t", stringsAsFactors = FALSE)
-  } else {
-    design <- design_path
-  }
-  rownames(design) <- design$Sample_ID
+  design <- parse_design(design_path)
   w <- which(design$Sample_ID %in% colnames(mat))
-  mat <- mat[, design$Sample_ID]
-  mat <- dplyr::mutate_all(mat, function(x) as.numeric(as.character(x)))
+  if (length(w) == 0) stop("No Sample_IDs from design table match matrix column names.")
   design <- design[w, ]
+  mat    <- mat[, design$Sample_ID, drop = FALSE]
   cat("|| DONE\n")
-  if (dim(design)[1] == 0) {
-    stop(
-      "No samples in design table is included in the data matrix\n
-    Check design and matrix sample format\n
-    Design table should include: Sample_ID, Sample_Condition, Sample_Replicate\n
-    Sample_ID in the design table and columns names in data matrix must match\n
-    see example tables and vignette."
+
+  ## ---- resolve fix_reference ----
+  if (is.null(fix_reference)) {
+    fix_reference <- design$Sample_ID
+    message("No fix_reference provided. Using all samples.")
+  } else if (is.character(fix_reference) && length(fix_reference) == 1 && fix_reference == "random") {
+    set.seed(123456)
+    n <- min(50L, max(1L, floor(nrow(design) * 0.3)))
+    fix_reference <- sample(design$Sample_ID, n)
+    message("Randomly selected ", n, " samples as reference.")
+  } else if (is.numeric(fix_reference) && length(fix_reference) == 1 && fix_reference < 1) {
+    message("Using top ", fix_reference * 100, "% columns by total counts as reference.")
+    counts  <- Matrix::colSums(mat)
+    top_idx <- order(counts, decreasing = TRUE)[1:round(ncol(mat) * fix_reference)]
+    fix_reference <- colnames(mat)[top_idx]
+    if (length(fix_reference) > 50) {
+      warning("More than 50 samples selected as reference; limiting to 50 for performance.")
+      fix_reference <- fix_reference[1:50]
+    }
+  } else if (is.numeric(fix_reference) && all(fix_reference %in% seq_len(ncol(mat)))) {
+    fix_reference <- colnames(mat)[fix_reference]
+  } else if (!all(fix_reference %in% design$Sample_ID)) {
+    stop("Invalid fix_reference: must be 'random', a fraction, numeric indices, or Sample_IDs present in design.")
+  }
+
+  ## ---- outputs to fill ----
+  pairs_scaling <- stats::setNames(numeric(0), character(0))
+  pairs_mean_g  <- stats::setNames(numeric(0), character(0))
+  model_list    <- NULL   # optional, only if return_full
+
+  if (length(fix_reference) > 1) {
+
+    cat("|| Multi-reference mode: ", length(fix_reference), " reference samples ||\n")
+
+    design_ref <- design[design$Sample_ID %in% fix_reference, , drop = FALSE]
+    mat_ref    <- mat[, design_ref$Sample_ID, drop = FALSE]
+
+    ## ----- A) REFERENCE-REFERENCE (bplapply) -----
+    pairs_df <- generate_pairwise_comparisons(design_ref$Sample_ID)
+    if (nrow(pairs_df) == 0) stop("No pairs generated among reference samples.")
+
+    cat("|| Reference-reference: ", nrow(pairs_df), " pairs (bplapply) ||\n")
+
+    pair_results <- BiocParallel::bplapply(
+      split(pairs_df, seq_len(nrow(pairs_df))),
+      function(task)
+        fun_refref(task, mat_ref, n_pop_reference, sigma_times, dist_family, Norm_plot),
+      BPPARAM = BiocParam
     )
-  }
-  # Add filter in case user decide on a fixed reference or set of reference -
-  if (!is.null(fix_reference)) {
-    # Select the indexes matching the reference (which should be a vector of sample IDs)
-    cat("Selecting reference samples for normalisation:\n")
-    wrev <- which(fix_reference %in% rownames(design))
-    if (length(wrev) != length(fix_reference)) {
-      if (fix_reference == "random") {
-        set.seed(123456)
-        tot_samp <- dim(design)[1]
-        # By random we always select 30% with a maximum of 50 samples - is samples are less than 50 we will by default select all samples:
-        n <- round(tot_samp / 100 * 30, 0)
-        if (n > 50) {
-          n <- 50
-        } else {
-          if (tot_samp <= 50) {
-            n <- tot_samp
-          }
-        }
-        r_index <- sample(1:tot_samp, n, replace = FALSE)
-        fix_reference <- design$Sample_ID[r_index]
-        if (tot_samp <= 50) {
-          fix_reference <- design$Sample_ID
-        }
-        cat("Selected ", length(fix_reference), " random reference samples\n")
-      } else {
-        stop("ERROR: fix_reference must be a vector of Samples_ID all part of the Sample_ID column in the design table")
-      }
-    }else{
-      fix_reference = fix_reference[wrev]
-    }
-  } else {
-    cat("Warning : no reference set was specified\n
-      For large number of sample pair-wise computation of Skew-Normal distribution is computational intensive.\n
-      Make sure to set up BiocParam accordingly and control memory availability.
-      For 100 samples ~5000 fittings are goin to be computed.\n")
-    fix_reference <- rownames(design)
-  }
-  # Consider that if the reference is only one we skip the reference normalization and we go straigth to the by_sample norm:
-  if(length(fix_reference) > 1){
-    # if multiple reference samples are selected we need to compute the pair-wise skew-normal distribution across them
-    design_ref <- as.data.frame(as.matrix(design[fix_reference, ]), stringsAsFactors = FALSE)
-    mat_sample <- as.data.frame(as.matrix(mat[, rownames(design_ref)]), stringsAsFactors = FALSE)
-    # pair_wise data.frame set up
-    sn <- 1:length(design_ref$Sample_ID)
-    names(sn) <- design_ref$Sample_ID
-    pairs <- t(combn(design_ref$Sample_ID, 2, FUN = NULL, simplify = TRUE))
-    pairs <- as.data.frame(rbind(pairs, pairs[, 2:1]))
-    colnames(pairs) <- c("samples", "reference")
-    pairs$sample_index <- sn[pairs$samples]
-    pairs$reference_index <- sn[pairs$reference]
-    pairs <- pairs[order(pairs$reference_index), ]
-    pairs <- pairs[order(pairs$sample_index), ]
-    rownames(pairs) <- NULL
-    # Select upper_triangle
-    pairs <- pairs[which(pairs$reference_index > pairs$sample_index), ]
-    cat(" || Compute Mixture of Skew-Normal Distributions ||\n")
-    if (!is.null(BiocParam)) {
-      model_list <- list()
-      rat_l <- lapply(1:nrow(pairs), function(x) {
-        ratio <- log(mat_sample[, as.character(pairs[x, "reference"])] / mat_sample[, as.character(pairs[x, "samples"])])
-        # Only consider finite values
-        ratio <- ratio[is.finite(ratio)]
-        if (length(ratio) == 0) {
-          cat("ERROR!!!")
-        } # Check!
-        return(list("ratio" = ratio, "n_pop" = n_pop_reference, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x))
-      })
-      model_list <- tryCatch(
-        {
-          BiocParallel::bplapply(rat_l, pair_fit, BPPARAM = BiocParam)
-        },
-        error = identity
+
+    pair_results <- Filter(Negate(is.null), pair_results)
+    if (!length(pair_results)) stop("All reference pair fits failed.")
+
+    dt <- data.table::rbindlist(lapply(pair_results, \(x)
+      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
+    ), use.names = TRUE)
+    dt <- dt[is.finite(scaling)]
+    pairscombo <- dt[, .(av_scaling = mean(scaling, na.rm = TRUE)), by = sample]
+    data.table::setnames(pairscombo, "sample", "samples")
+
+    ## build average_reference as weighted mean of scaled refs
+    mm <- mat[, pairscombo$samples, drop = FALSE]
+    w  <- pairscombo$av_scaling; names(w) <- pairscombo$samples
+    k  <- length(w)
+    avg_ref <- as.numeric(mm %*% w) / k
+    names(avg_ref) <- rownames(mm)
+    
+    # remove unused objects:
+    rm(mat_ref, design_ref, pairs_df, mm, w, pairscombo, pair_results)
+    gc(FALSE)
+
+    ## ----- B) SAMPLE vs AVERAGE_REFERENCE (bplapply) -----
+    cat("|| Sample-average_reference (bplapply) ||\n")
+    avg_ref_vec <- avg_ref[rownames(mat)]
+    sample_ids  <- design$Sample_ID
+    cat("Number of samples: ", length(sample_ids), "\n")
+
+    avg_results <- BiocParallel::bplapply(
+      as.list(sample_ids),
+      function(sname)
+        fun_avgref(sname, mat, avg_ref_vec, n_pop, sigma_times, dist_family, Norm_plot),
+      BPPARAM = BiocParam
+    )
+
+    avg_results <- Filter(Negate(is.null), avg_results)
+    if (!length(avg_results)) stop("All sample vs average_reference fits failed.")
+
+    sc_dt <- data.table::rbindlist(lapply(avg_results, \(x)
+      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
+    ), use.names = TRUE)
+    sc_dt <- sc_dt[data.table::CJ(sample = design$Sample_ID), on = "sample"]  # align to design
+    pairs_scaling <- stats::setNames(sc_dt$scaling, sc_dt$sample)
+
+    ## Free memory
+    rm( sc_dt)  # free memory
+
+    ## Optional: plotting (throttle to avoid explosion)
+    if (isTRUE(Norm_plot)) {
+      cat("|| Plotting pair models ||\n")
+
+      # map: sample -> model (may be NULL)
+      models_by_sample <- stats::setNames(
+        lapply(avg_results, `[[`, "model"),
+        vapply(avg_results, `[[`, character(1), "sample")
       )
-    } else {
-      model_list <- list()
-      model_list <- lapply(1:nrow(pairs), function(x) {
-        # get log2-ratio of the selected pair
-        ratio <- log(mat_sample[, as.character(pairs[x, "reference"])] / mat_sample[, as.character(pairs[x, "samples"])])
-        # Only consider finite values
-        ratio <- ratio[is.finite(ratio)]
-        ll <- list("ratio" = ratio, "n_pop" = n_pop_reference, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x)
-        model <- pair_fit(ll)
-        return(model)
-      })
+
+      plot_samples <- names(models_by_sample)
+      plot_samples <- plot_samples[!vapply(models_by_sample, is.null, logical(1))]
+      plot_samples <- intersect(plot_samples, colnames(mat))
+
+      avg_ref_vec_plot <- avg_ref_vec  # local copy for workers
+
+      BiocParallel::bplapply(
+        as.list(plot_samples),
+        function(sname) {
+          mdl <- models_by_sample[[sname]]
+          if (is.null(mdl)) return(NULL)
+
+          s <- as.numeric(mat[, sname, drop = FALSE])
+          r <- avg_ref_vec_plot
+
+          keep <- is.finite(r) & is.finite(s) & (r + s) > 0
+          if (!any(keep)) return(NULL)
+
+          rn <- rownames(mat)[keep]                 # <- add rownames
+          X2 <- cbind(r[keep], s[keep])  # small dense 2-col matrix
+          colnames(X2) <- c("average_reference", sname)
+          rownames(X2) <- rn                        # <- set rownames explicitly
+
+          plot_pair_model(list(
+            model          = mdl,
+            mat            = X2,                    # small dense 2-col matrix w/ rownames
+            sample_name    = sname,
+            reference_name = "average_reference",
+            saving_path    = saving_path,
+            n_pop          = mdl$n_pop
+          ))
+          NULL
+        },
+        BPPARAM = BiocParam
+      )
     }
-    cat("|| Computing models Done\n")
-    # Scaling and create Av. Sample, Append to mat[,rownames(design)]
-    pairs$scaling <- NA
-    scaling_ll <- lapply(1:length(model_list), function(x) {
-      reference_name <- as.character(pairs[x, "reference"])
-      sample_name <- as.character(pairs[x, "samples"])
-      model <- model_list[[x]]
-      ww <- which(log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) >= model$interval["lb"] &
-        log(as.numeric(as.character(mat[, reference_name])) / as.numeric(as.character(mat[, sample_name]))) <= model$interval["ub"])
-      mm <- mat[ww, c(sample_name, reference_name)]
-      pseudo_cov <- colSums(mm)
-      rat <- pseudo_cov[2] / pseudo_cov[1]
-      names(rat) <- x
-      return(rat)
-    })
-    pairs$scaling <- unlist(scaling_ll)
-    pairs_add <- pairs[, c(2, 1, 4, 3, 5)]
-    colnames(pairs_add) <- colnames(pairs)
-    pairs_add$scaling <- 1 / pairs$scaling
-    pairs_add <- pairs_add[order(pairs_add$reference_index), ]
-    pairs_add <- pairs_add[order(pairs_add$sample_index), ]
-    self <- cbind(names(sn), names(sn), 1:length(sn), 1:length(sn), rep(1, length(sn)))
-    colnames(self) <- colnames(pairs_add)
-    pairs_add <- rbind(pairs_add, self)
-    pairscombo <- rbind(pairs, pairs_add)
-    pairscombo <- pairscombo[order(pairscombo$reference_index), ]
-    pairscombo <- pairscombo[order(pairscombo$sample_index), ]
-    pairscombo <- data.table::as.data.table(pairscombo)
-    pairscombo$scaling <- as.numeric(as.character(pairscombo$scaling))
-    pairscombo <- split(pairscombo, pairscombo$samples)
-    pairscombo <- lapply(pairscombo, function(x) {
-      mean(x$scaling)
-    })
-    pairscombo <- data.table::as.data.table(cbind(names(pairscombo), unlist(pairscombo)))
-    colnames(pairscombo) <- c("samples", "av_scaling")
-    mm <- mat[, as.character(pairscombo$samples)]
-    mat_append <- mat[, rownames(design)]
-    # Add the average reference to the mat_append
-    mat_append$average_reference <- rowMeans(as.matrix(mm) %*% diag(pairscombo$av_scaling))
-    # Compute Parallel model fit pairwise every sample to the mean_reference
-    # pair_wise data.frame set up
-    sn <- 1:length(design$Sample_ID)
-    names(sn) <- design$Sample_ID
-    pairs <- as.data.frame(cbind(design$Sample_ID, rep("average_reference", length(sn))))
-    colnames(pairs) <- c("samples", "reference")
-    rownames(pairs) <- NULL
-    cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
+    ## Free memory
+    rm(avg_results)  # free memory
 
   } else {
 
-    # if fix_reference == 1 we want to scale it to one reference sample only therefore we set average_reference to the fix_reference sample
-    mat_append <- mat[, rownames(design)]
-    # Compute Parallel model fit pairwise every sample to the mean_reference
-    # pair_wise data.frame set up
-    samp_left = design$Sample_ID[!grepl(fix_reference,design$Sample_ID)]
-    sn <- 1:length(samp_left)
-    names(sn) <- samp_left
-    pairs <- as.data.frame(cbind(samp_left, rep(fix_reference, length(sn))))
-    colnames(pairs) <- c("samples", "reference")
-    rownames(pairs) <- NULL
-    cat("|| Compute Mixture of Skew-Normal Distributions between samples and Average reference ||\n")
+    ## ----- C) SINGLE REFERENCE (bplapply) -----
+    ref <- fix_reference[1]
+    cat("|| Single reference mode (bplapply): ", ref, " ||\n")
 
-  }
+    sample_ids <- setdiff(design$Sample_ID, ref)
+    r_full <- as.numeric(mat[, ref, drop = FALSE])  # slice once on master
+    keep_r <- is.finite(r_full)
 
-  if (!is.null(BiocParam)) {
-    model_list <- list()
-    rat_l <- lapply(1:nrow(pairs), function(x) {
-      ratio <- log(mat_append[, as.character(pairs[x, "reference"])] / mat_append[, as.character(pairs[x, "samples"])])
-      # Only consider finite values
-      ratio <- ratio[is.finite(ratio)]
-      return(list("ratio" = ratio, "n_pop" = n_pop, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x))
-    })
-    model_list <- BiocParallel::bplapply(rat_l, pair_fit, BPPARAM = BiocParam)
-  } else {
-    model_list <- list()
-    model_list <- lapply(1:nrow(pairs), function(x) {
-      cat(x, "\n")
-      # get log2-ratio of the selected pair
-      ratio <- log(mat_append[, as.character(pairs[x, "reference"])] / mat_append[, as.character(pairs[x, "samples"])])
-      # Only consider finite values
-      ratio <- ratio[is.finite(ratio)]
-      ll <- list("ratio" = ratio, "n_pop" = n_pop, "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x)
-      model <- pair_fit(ll)
-      return(model)
-    })
-  }
+    cat("Number of samples: ", length(sample_ids), "\n")
 
-  cat("|| Done.\n")
+    fix_results <- BiocParallel::bplapply(
+      as.list(sample_ids),
+      function(sname)
+        fun_single(sname, mat, ref, r_full, keep_r, n_pop, sigma_times, dist_family, Norm_plot),
+      BPPARAM = BiocParam
+    )
+    fix_results <- Filter(Negate(is.null), fix_results)
+    if (!length(fix_results)) stop("All sample vs fixed-reference fits failed.")
 
-  pairs$scaling <- NA
-  pairs$mean_g <- NA
+    sc_dt <- data.table::rbindlist(lapply(fix_results, \(x)
+      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
+    ), use.names = TRUE)
+    sc_dt <- rbind(sc_dt, data.table::data.table(sample = ref, reference = ref, scaling = 1.0))
+    sc_dt <- sc_dt[data.table::CJ(sample = design$Sample_ID), on = "sample"]
+    pairs_scaling <- stats::setNames(sc_dt$scaling, sc_dt$sample)
 
-  scaling_ll <- lapply(1:length(model_list), function(x) {
-    reference_name <- as.character(pairs[x, "reference"])
-    sample_name <- as.character(pairs[x, "samples"])
-    model <- model_list[[x]]
-    ww <- which(log(mat_append[, reference_name] / mat_append[, sample_name]) >= model$interval["lb"] &
-      log(mat_append[, reference_name] / mat_append[, sample_name]) <= model$interval["ub"])
-    pseudo_cov <- colSums(mat_append[ww, c(sample_name, reference_name)])
-    rat <- pseudo_cov[2] / pseudo_cov[1]
-    names(rat) <- x
-    return(rat)
-  })
+    ## Optional: plotting (throttle to avoid explosion)
+    if (isTRUE(Norm_plot)) {
+      cat("|| Plotting pair models ||\n")
 
-  mean_g <- lapply(1:length(model_list), function(x) {
-    reference_name <- as.character(pairs[x, "reference"])
-    sample_name <- as.character(pairs[x, "samples"])
-    model <- model_list[[x]]
-    return(exp(model$interval["mean_g"]))
-  })
+      # map: sample -> model (may be NULL)
+      models_by_sample <- stats::setNames(
+        lapply(fix_results, `[[`, "model"),
+        vapply(fix_results, `[[`, character(1), "sample")
+      )
 
-  pairs$scaling <- unlist(scaling_ll)
-  pairs$mean_g <- unlist(mean_g)
+      plot_samples <- names(models_by_sample)
+      plot_samples <- plot_samples[!vapply(models_by_sample, is.null, logical(1))]
+      plot_samples <- intersect(plot_samples, colnames(mat))
 
-  # Plot the normalisation graphs relative to the average_reference
-  cat("|| Plot pairs with average reference\n")
-  if (Norm_plot == TRUE) {
-    plot_l <- lapply(1:length(model_list), function(x) {
+      ref_vec_plot <- r_full  # local copy for workers
 
-      reference_name <- as.character(pairs[x, "reference"])
-      sample_name <- as.character(pairs[x, "samples"])
-      model <- model_list[[x]]
-      ll <- list("model" = model, "mat_append" = mat_append, "sample_name" = sample_name, "reference_name" = reference_name, "saving_path" = saving_path, "n_pop" = model$n_pop)
-      return(ll)
-    })
-    if (!is.null(BiocParam)) {
-      BiocParallel::bplapply(plot_l, plot_pair_model, BPPARAM = BiocParam)
-    } else {
-      lapply(plot_l, plot_pair_model)
+      BiocParallel::bplapply(
+        as.list(plot_samples),
+        function(sname) {
+          mdl <- models_by_sample[[sname]]
+          if (is.null(mdl)) return(NULL)
+
+          s <- as.numeric(mat[, sname, drop = FALSE])
+          r <- ref_vec_plot
+
+          keep <- is.finite(r) & is.finite(s) & (r + s) > 0
+          if (!any(keep)) return(NULL)
+
+          rn <- rownames(mat)[keep]                 # <- add rownames
+          X2 <- cbind(r[keep], s[keep])  # small dense 2-col matrix
+          colnames(X2) <- c("average_reference", sname)
+          rownames(X2) <- rn                        # <- set rownames explicitly
+
+          plot_pair_model(list(
+            model          = mdl,
+            mat            = X2,                    # small dense 2-col matrix w/ rownames
+            sample_name    = sname,
+            reference_name = "average_reference",
+            saving_path    = saving_path,
+            n_pop          = mdl$n_pop
+          ))
+          NULL
+        },
+        BPPARAM = BiocParam
+      )
     }
+
   }
 
-  # if fix_reference == 1 we add "1" to the fix_reference sample
-  if(length(fix_reference) == 1){
-    pairs = rbind(pairs, c(fix_reference, fix_reference, 1, 1))
+  ## ---- apply scaling (backend-aware, no unnecessary materialization) ----
+  cat("|| Apply scaling to the matrix ||\n")
+  sample_ids <- design$Sample_ID
+  scaling    <- pairs_scaling[sample_ids]
+
+  ## In-memory sparse: slice + scale in place (fast)
+  mat_subset <- mat[, sample_ids, drop = FALSE]
+  norm_mat   <- scale_sparse_columns(mat_subset, scaling)
+  backend    <- "sparse"
+
+  ## ---- prepare design_scaling ----
+  design_df <- as.data.frame(design)
+  rownames(design_df) <- design_df$Sample_ID
+  design_df$scaling <- as.numeric(NA)
+  
+  design_scaling <- design_df[sample_ids, , drop = FALSE]
+  design_scaling$scaling <- scaling
+
+  ## ---- save (size- and backend-aware) ----
+  if (isTRUE(Save_results)) {
+    file_name <- if (is.character(mat_path)) basename(tools::file_path_sans_ext(mat_path)) else "matrix"
+
+    ## 1) Always write the normalization parameters
+    design_path_out <- file.path(saving_path, "Normalisation_Parameters.txt")
+    write.table(design_scaling, file = design_path_out, sep = "\t", quote = FALSE, row.names = FALSE)
+    message("Saved normalization parameters: ", design_path_out)
+
+    if (!inherits(norm_mat, "dgCMatrix")) {
+      ## Realize and coerce to sparse to keep size down
+      norm_mat <- as(Matrix::Matrix(as.matrix(norm_mat), sparse = TRUE), "dgCMatrix")
+    }
+    rds_path <- file.path(saving_path, paste0(file_name, "_normalized.rds"))
+    saveRDS(norm_mat, file = rds_path, compress = "xz")
+    message("Saved normalized sparse matrix as RDS: ", rds_path)
+
+    ## Optional dense TXT for small outputs (kept conservative)
+    if (ncol(norm_mat) <= 2000) {
+      txt_path <- file.path(saving_path, paste0(file_name, "_normalized.txt"))
+      write.table(as.matrix(norm_mat), file = txt_path, sep = "\t", quote = FALSE, col.names = NA)
+      message("Saved normalized matrix as TXT (dense): ", txt_path)
+    } else {
+      message("Matrix has >2000 columns; skipping dense TXT export.")
+    }
   }
   
-  cat("Save the scaling factor to file filling in the design table\n")
-
-  #norm_mat <- mat[, rownames(design)]
-  norm_mat <- sweep(mat[, pairs$samples], 2, as.numeric(as.character(pairs$scaling)), "*")
-  # Save the normalised table
-  design_scaling <- design[pairs$samples,]
-  design_scaling$scaling <- pairs$scaling
-  design_scaling$mean_g <- pairs$mean_g
-
-  if (Save_results == TRUE) {
-    if (is.character(mat_path)) {
-      file_name <- tools::file_path_sans_ext(mat_path)
-      file_name <- basename(file_name)
-    } else {
-      file_name <- "matrix"
-    }
-    write.table(design_scaling, file = paste0(saving_path, "/Normalisation_Parameters.txt"), sep = "\t", quote = FALSE, col.names = NA)
-    write.table(norm_mat, file = paste0(saving_path, "/", file_name, "_normalized.txt"), sep = "\t", quote = FALSE, col.names = NA)
-  }
-
-  Result <- list(scaling_factors = design_scaling, ori_mat = mat[, rownames(design)], norm_mat = norm_mat, model_list = model_list)
-  # Save to oath the scaled tables as "Norm_table"
+  ## ---- return (lightweight) ----
+  Result <- list(
+    scaling_factors = design_scaling,
+    norm_mat        = norm_mat
+  )
+  if (isTRUE(return_full)) Result$model_list <- model_list
   class(Result) <- "GMSN"
   return(Result)
+
 }
+
+

@@ -2,20 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{noceros}
 \alias{noceros}
-\title{noceros To count number of non-zero elements}
+\title{noceros}
 \usage{
 noceros(x, num = TRUE, k = 0)
 }
 \arguments{
-\item{x}{vector to check zeros}
+\item{x}{Numeric vector.}
 
-\item{num}{if vector is numeric TRUE FALSE}
+\item{num}{Logical. If \code{TRUE}, returns the count; if \code{FALSE}, returns indices (default = TRUE).}
 
-\item{k}{default is 0}
+\item{k}{Threshold. Elements greater than \code{k} are considered non-zero (default = 0).}
 }
 \value{
-return non zero elements
+Either a count or vector of indices of non-zero elements.
 }
 \description{
-noceros To count number of non-zero elements
+Count or retrieve non-zero elements from a numeric vector.
 }

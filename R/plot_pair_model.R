@@ -1,9 +1,19 @@
-#' plot_pair_model Plots fitted distributions to the ratios.
+#' @title plot_pair_model
+#' @description Plots the fitted distributions and saves diagnostic PNGs of each normalization pair.
 #'
-#' @param ll List composed by: "ratio" for the selected pair, "n_pop" i.e. n° of expected populations,
-#'          "sigma_times" n° of sigmas to select invariant observations, "dist_family" distribution famly see mixsmsn, ...
+#' This function expects a list with:
+#' - model: a compact GMSNfit object from pair_fit()
+#' - mat_append: a matrix or dgCMatrix with at least sample_name and reference_name columns
+#' - sample_name: character string
+#' - reference_name: character string
+#' - saving_path: character string
 #'
-#' @returns Returns automatically pdf saved within "saving_path"/Norm_pair_plots/ of the fitting and QC
+#' The function will save a PNG under saving_path/Norm_pair_plots/.
+#'
+#' @param ll A list containing ratio information and parameters, including: "ratio", "n_pop", "sigma_times", "dist_family", and "index".
+#'
+#' @return Invisibly returns NULL. Plots are saved to disk under saving_path/Norm_pair_plots/.
+#'
 #' @export
 #'
 #' @import mixsmsn
@@ -11,104 +21,98 @@
 #' @import graphics
 #' @import utils
 #'
-#' @examples
-#' \dontrun{
-#' # Typical usage
-#' ll <- list(
-#'   "ratio" = ratio, "n_pop" = n_pop_reference,
-#'   "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x
-#' )
-#' plot_pair_model(ll)
-#' }
-#'
+
 plot_pair_model <- function(ll) {
-  # Import generate functions:
-  smsnmean <- function(mu, sigma2, shape) {
-    xi <- mu
-    omega <- sqrt(sigma2)
-    alpha <- shape
-    C <- sqrt(2 / pi)
-    delta <- alpha / sqrt(1 + alpha^2)
-    mean <- xi + omega * delta * C
-    mean
-  }
+  # Sparse/dense-safe column extractor
+
   dSN <- utils::getFromNamespace("dSN", "mixsmsn")
 
-  model <- ll[["model"]]
-  mat <- ll[["mat_append"]]
-  sample_name <- ll[["sample_name"]]
+  model          <- ll[["model"]]        # GMSNfit (compact list)
+  mat            <- ll[["mat"]]   # 2-column slice is ideal
+  sample_name    <- ll[["sample_name"]]
   reference_name <- ll[["reference_name"]]
-  path <- ll[["saving_path"]]
-  n_pop <- ll[["n_pop"]]
-  # Save_pair plots:
-  if (!is.null(path)) {
-    save <- paste0(path, "/Norm_pair_plots/")
-    dir.create(save)
-  } else {
-    stop("ERROR: to plot the Normalisation pair plots a path to a general output folder is required")
+  path           <- ll[["saving_path"]]
+  n_pop          <- ll[["n_pop"]]
+
+  if (is.null(path)) stop("saving_path is required")
+  outdir <- file.path(path, "Norm_pair_plots")
+  dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+
+  # Pull columns safely
+  ref  <- as.numeric(mat[rownames(mat), reference_name, drop = FALSE])
+  samp <- as.numeric(mat[rownames(mat), sample_name, drop = FALSE])
+
+  ratio <- log(ref / samp)
+  ratio <- ratio[is.finite(ratio)]
+
+  if (!length(ratio)) {
+    warning(sprintf("plot_pair_model: no finite ratios for %s vs %s", sample_name, reference_name))
+    return(invisible(NULL))
   }
 
-  ratio <- log(mat[, reference_name] / mat[, sample_name])
-  # Only consider finite values
-  ratio <- ratio[is.finite(ratio)]
-  xx <- seq(min(ratio), max(ratio), (max(ratio) - min(ratio)) / (length(ratio) * 100))
-  # We produce grey lines for all but the selected population:
-  # To select the reference population we can two main criteria plus an additional:
-  # 1) Small error
-  # 2) comprise the largest population
-  score <- model$score
-  # Define colours e.g. reference population in "red"
-  myColors <- rep("black", n_pop)
-  myColors[which.max(score)] <- "red"
-  samp_apirs <- paste0("Sample_", sample_name, "_Reference_", reference_name, ".png")
-  nm <- paste0(save, "/", samp_apirs)
-  png(nm)
+  # X-grid (use model hint if present)
+  if (!is.null(model$ratio_range)) {
+    x_min <- model$ratio_range["min"]; x_max <- model$ratio_range["max"]
+    if (!is.finite(x_min) || !is.finite(x_max) || x_min >= x_max) {
+      x_min <- min(ratio); x_max <- max(ratio)
+    }
+  } else { x_min <- min(ratio); x_max <- max(ratio) }
+  xx <- seq(x_min, x_max, length.out = 1000L)
+
+  # Highlight best component
+  best <- which.max(model$score)
+  cols <- rep("black", n_pop)
+  if (length(best)) cols[best] <- "red"
+
+  # scatter bounds
+  both <- c(ref, samp)
+  mmax <- max(both[is.finite(both)], na.rm = TRUE)
+  nz   <- both[is.finite(both) & both != 0]
+  mmin <- if (length(nz)) min(nz, na.rm = TRUE) else 1
+
+  lb <- unname(model$interval["lb"]); ub <- unname(model$interval["ub"])
+  ww <- which(is.finite(log(ref / samp)) & log(ref / samp) >= lb & log(ref / samp) <= ub)
+
+  fname <- sprintf("Sample_%s_Reference_%s.png", sample_name, reference_name)
+  fpath <- file.path(outdir, fname)
+
+  png(fpath, width = 2000, height = 2000, res = 600, type = "cairo-png")
+    on.exit(grDevices::dev.off(), add = TRUE)
+
     par(mar = c(2, 2, 2, 2))
     layout(matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3), 4, 4, byrow = TRUE))
-    # par(mfrow = c(1, 3), pty="s")
-    # Model fitting plot
-    mixsmsn::mix.hist(ratio, model, col.hist = "grey", border = "white", cex = 0.5, cex.lab = .5, cex.axis = .5, cex.main = .5, cex.sub = .5, breaks = 100)
-    mixsmsn::mix.lines(ratio, model, cex = 0.5, cex.lab = .5, cex.axis = .5, cex.main = .5, cex.sub = .5, col = "blue")
-    dens <- matrix(NA_real_, ncol = n_pop, nrow = length(xx))
-    dens.list <- vector("list", n_pop)
-    means <- vector("numeric", n_pop)
-    modes <- vector("numeric", n_pop)
-    dens.max <- vector("numeric", n_pop)
-    n_calls <- vector("numeric", n_pop)
-    for (j in 1:n_pop) {
-      dens <- dSN(xx, model$mu[j], model$sigma2[j], model$shape[j])
-      dens.list[[j]] <- data.frame(x = xx, y = dens)
-      means[j] <- smsnmean(model$mu[j], model$sigma2[j], model$shape[j])
-      dens.max[j] <- which.max(dens.list[[j]]$y)
-      modes[j] <- dens.list[[j]]$x[dens.max[j]]
-      lines(xx, model$pii[j] * dens, type = "l", col = myColors[j], lwd = 1)
-      lines(segments(means[j], 0, means[j], model$pii[j] * dSN(model$means[j], model$mu[j], model$sigma2[j], model$shape[j]), lty = 2, lwd = 1, col = myColors[j]))
-      lines(segments(modes[j], 0, modes[j], model$pii[j] * dens[dens.max], col = myColors[j], lwd = 1))
+
+    ## Panel 1: histogram + mixture/components (density scale)
+    h <- hist(ratio, breaks = 100, plot = FALSE) # for a better looking breaks --> breaks= "FD"
+    plot(h, freq = FALSE, col = "grey85", border = FALSE,
+        xlab = "log(reference / sample)", main = paste0("Mixture fit number of populations: ", n_pop),
+        xlim = c(x_min, x_max), ylim = c(0, max(h$density, na.rm = TRUE) * 1.2),
+        axes = TRUE)
+
+    # components
+    for (j in seq_len(n_pop)) {
+      comp <- model$pii[j] * dSN(xx, model$mu[j], model$sigma2[j], model$shape[j])
+      lines(xx, comp, col = cols[j], lwd = if (j == best) 2 else 1)
     }
-    # Scatter with selected population
-    mmax <- as.numeric(c(mat[, reference_name], mat[, sample_name]))
-    mmax <- max(mmax[is.finite(mmax)])
-    mmin <- as.numeric(c(mat[, reference_name], mat[, sample_name]))
-    mmin <- mmin[is.finite(mmin)]
-    mmin <- min(mmin[mmin != 0])
-    ##
-    ww <- which(log(mat[, reference_name] / mat[, sample_name]) >= model$interval["lb"] &
-      log(mat[, reference_name] / mat[, sample_name]) <= model$interval["ub"])
-    pseudo_cov <- colSums(mat[ww, c(sample_name, reference_name)])
-    rat <- pseudo_cov[2] / pseudo_cov[1]
+    # overall mixture (sum of components)
+    mix <- rowSums(sapply(seq_len(n_pop), function(j)
+      model$pii[j] * dSN(xx, model$mu[j], model$sigma2[j], model$shape[j])))
+    lines(xx, mix, col = "blue", lwd = 1.5)
+    abline(v = c(lb, ub), col = "red", lty = 2)
 
-    # Ori mat
-    plot(mat[, reference_name], mat[, sample_name], xlab = "Average reference", ylab = "Selected Sample", cex = 0.5, cex.lab = .5, cex.axis = .5, cex.main = .5, cex.sub = .5, log = "xy", xlim = c(mmin, mmax), ylim = c(mmin, mmax), pch = 20, asp = 1)
-    points(mat[ww, reference_name], mat[ww, sample_name], log = "xy", xlim = c(mmin, mmax), ylim = c(mmin, mmax), cex = 0.5, col = "red")
-    abline(coef = c(0, 1), col = "red")
-    abline(v = 100)
-    abline(h = 100)
+    ## Panel 2: original scatter with invariant points
+    plot(ref, samp, log = "xy", pch = 20, cex = 0.3,
+        xlab = "Reference", ylab = "Sample",
+        xlim = c(mmin, mmax), ylim = c(mmin, mmax), main = "Original")
+    if (length(ww)) points(ref[ww], samp[ww], pch = 20, cex = 0.3, col = "red")
+    abline(a = 0, b = 1, col = "red")
 
-    # Scaled mat
-    plot(mat[, reference_name], mat[, sample_name] * (exp(model$interval["mean_g"])), xlab = "Average reference", ylab = "Selected Sample", cex = 0.5, cex.lab = .5, cex.axis = .5, cex.main = .5, cex.sub = .5, log = "xy", xlim = c(mmin, mmax), ylim = c(mmin, mmax), pch = 20, asp = 1)
-    abline(coef = c(0, 1), col = "red")
-    abline(v = 100)
-    abline(h = 100)
+    ## Panel 3: scaled scatter using exp(mean_g)
+    scale_g <- exp(unname(model$interval["mean_g"]))
+    plot(ref, samp * scale_g, log = "xy", pch = 20, cex = 0.3,
+        xlab = "Reference", ylab = "Sample * exp(mean_g)",
+        xlim = c(mmin, mmax), ylim = c(mmin, mmax), main = "Scaled")
+    abline(a = 0, b = 1, col = "red")
 
-  dev.off()
+    invisible(fpath)
 }

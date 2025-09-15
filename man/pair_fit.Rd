@@ -2,28 +2,25 @@
 % Please edit documentation in R/pair_fit.R
 \name{pair_fit}
 \alias{pair_fit}
-\title{pair_fit execute pair wise fitting of Skewed normal on the freq. distribution of the ratios.}
+\title{pair_fit}
 \usage{
-pair_fit(ll)
+pair_fit(ll, do_gc = FALSE)
 }
 \arguments{
-\item{ll}{List composed by: "ratio" for the selected pair, "n_pop" i.e. n° of expected populations,
-"sigma_times" n° of sigmas to select invariant observations, "dist_family" distribution famly see mixsmsn, ...}
+\item{ll}{A list with the following elements:
+\itemize{
+\item \code{ratio}: numeric vector of log-ratios
+\item \code{n_pop}: (optional) integer, expected number of populations (default = auto-detect)
+\item \code{sigma_times}: numeric, multiplier for standard deviation to define invariant region
+\item \code{dist_family}: character string, distribution family for \code{mixsmsn}
+\item \code{index}: character or numeric identifier (used for tracking/logging)
+}}
+
+\item{do_gc}{whether to clean memory via gc}
 }
 \value{
-Return EM algorithm output for FM-SMSN distributions with additional fields: n_pop,means,modes,fre  q,freq_dist,sigma_norm
+A list containing the fitted model parameters, including \code{n_pop}, \code{means}, \code{modes}, \code{freq}, \code{freq_dist}, \code{sigma_norm}, \code{score}, and \code{interval}.
 }
 \description{
-pair_fit execute pair wise fitting of Skewed normal on the freq. distribution of the ratios.
-}
-\examples{
-\dontrun{
-# Typical usage
-ll <- list(
-  "ratio" = ratio, "n_pop" = n_pop_reference,
-  "sigma_times" = sigma_times, "dist_family" = dist_family, "index" = x
-)
-model <- pair_fit(ll)
-}
-
+Executes pairwise fitting of skewed normal mixtures on log-ratio distributions.
 }

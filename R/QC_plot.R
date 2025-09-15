@@ -1,12 +1,14 @@
-#' QC_plot Function performing QC by PCA analysis.
+#' @title QC_plot
+#' @description Performs quality control analysis via PCA and clustering across normalization methods.
 #'
-#' @param gnmsn_obj path to the matrix (n * m having features i.e. genes, proteins, chipseq peaks in the raws and individual samples in the columns)
-#' @param design_path design matrix describing the samples. design matrix must be composed by:  Sample_ID, Sample_Condition and Sample_Replicate columns (layers in Sample_conditions will be defined by "_" separator)
-#' @param custom_table vector of Sample_ID names to be used as initial reference for normalisation. If random specified it select randomly 30% of the samples (To be improoved considering global coverage and intensity in order to avoid failed samples) (default NULL)
-#' @param saving_path full path where results are saved . default to the working directory
-#' @param norm_methods normalisation methods to compare the GNMSN : can be one of "quantile_normalisation", "median_of_ratios_normalization", "uqua", "tmm"
+#' @param gnmsn_obj Path to a matrix (n × m) where rows are features (e.g., genes, proteins, ChIP-seq peaks) and columns are samples.
+#' @param design_path Path to the design matrix describing samples. It must include `Sample_ID`, `Sample_Condition`, and `Sample_Replicate` columns. Subconditions are defined by the `_` separator.
+#' @param custom_table Optional character vector of `Sample_ID`s to use as reference samples for normalization. If `"random"` is specified, selects ~30% of samples randomly. (Default = NULL)
+#' @param saving_path Full path where results are saved. Defaults to the working directory.
+#' @param norm_methods Character vector of normalization methods to compare. Can include `"quantile_normalisation"`, `"median_of_ratios_normalization"`, `"uqua"`, `"tmm"`.
 #'
-#' @returns Save plots and table to the "saving_pth"/Norm_quality/
+#' @return Saves PCA plots and summary tables to the `saving_path/Norm_quality/` directory. Returns NULL invisibly.
+#'
 #' @export
 #'
 #' @import grDevices
@@ -18,22 +20,7 @@
 #' @import methods
 #' @importFrom rlang .data
 #'
-#' @examples
-#' \dontrun{
-#' # Typical usage
-#' param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
-#'
-#' Result <- RunNorm(mat,
-#'   deg_design,
-#'   fix_reference = "random",
-#'   row_name_index = 1,
-#'   saving_path = out_dir,
-#'   n_pop = 1, BiocParam = param
-#' )
-#'
-#' QC_plot(Result, deg_design, saving_path = out_dir)
-#' }
-#'
+
 QC_plot <- function(gnmsn_obj,
                     design_path,
                     custom_table = NULL,

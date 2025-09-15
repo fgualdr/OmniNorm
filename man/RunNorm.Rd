@@ -2,7 +2,7 @@
 % Please edit documentation in R/RunNorm.R
 \name{RunNorm}
 \alias{RunNorm}
-\title{RunNorm function to execute the whole normalisation flow.}
+\title{RunNorm}
 \usage{
 RunNorm(
   mat_path,
@@ -16,52 +16,57 @@ RunNorm(
   dist_family = "Skew.normal",
   Norm_plot = TRUE,
   Save_results = TRUE,
-  BiocParam = NULL
+  return_full = FALSE,
+  BiocParam = NULL,
+  cpus = 2
 )
 }
 \arguments{
-\item{mat_path}{path to the matrix (n * m having features i.e. genes, proteins, chipseq peaks in the raws and individual samples in the columns)}
+\item{mat_path}{Input data matrix. Can be:
+\itemize{
+\item A file path to a .csv, .tsv, or .txt file with rownames in the first column
+\item A dense matrix or data.frame
+\item A sparse dgCMatrix object (from the Matrix package)
+}}
 
-\item{design_path}{design matrix describing the samples. design matrix must be composed by:  Sample_ID, Sample_Condition and Sample_Replicate columns (layers in Sample_conditions will be defined by "_" separator)}
+\item{design_path}{Path to the design matrix. Must contain columns: Sample_ID, Sample_Condition, and Sample_Replicate. Layers in conditions are defined by underscores (_).}
 
-\item{fix_reference}{vector of Sample_ID names to be used as initial reference for normalisation. If random specified it select randomly 30\% of the samples (To be improoved considering global coverage and intensity in order to avoid failed samples) (default NULL)}
+\item{fix_reference}{Character vector of Sample_IDs to use as normalization reference. Can also be:
+\itemize{
+\item "random" to randomly select ~30\% of samples
+\item A numeric fraction (e.g. 0.3) to select top-N by intensity
+}}
 
-\item{row_name_index}{column index where to find the rownames of the matrix (default 1)}
+\item{row_name_index}{Integer indicating the column index of rownames in the input file (default = 1). Ignored if input is a matrix or dgCMatrix.}
 
-\item{n_pop}{n° of populations expected (default NULL)}
+\item{n_pop}{Number of populations expected in sample-vs-reference fits (default = 1). Set to NULL to auto-detect.}
 
-\item{n_pop_reference}{n° of expected populations in the initial within references normalisation (default NULL)}
+\item{n_pop_reference}{Number of populations for reference-vs-reference fits (default = 1). NULL for auto.}
 
-\item{saving_path}{full path where results are saved default to the working directory}
+\item{saving_path}{Output directory to save results (required if Save_results = TRUE).}
 
-\item{sigma_times}{number of sigmas defining lower and upper bounds to include features (i.e. genes, peaks, proteins ,..) considered to be unchanged relative to the mean distribution}
+\item{sigma_times}{Multiplier of standard deviation to define invariant interval around the dominant mode (default = 1).}
 
-\item{dist_family}{distribution family see package mixsmsn (default "Skew.normal")}
+\item{dist_family}{Distribution family name to use for fitting. Passed to mixsmsn (default = "Skew.normal").}
 
-\item{Norm_plot}{Whether or not to save individual plots during normalisation (defulat TRUE)}
+\item{Norm_plot}{Logical. Whether to generate and save QC plots (default = TRUE). Large datasets may be subsampled for plotting.}
 
-\item{Save_results}{whether to save individual plots and results (default TRUE)}
+\item{Save_results}{Logical. Whether to save outputs to disk (default = TRUE).}
 
-\item{BiocParam}{BiocParallel param object to be specified as : "param <- BiocParallel::MulticoreParam(workers=2,progressbar = TRUE)" (default NULL)}
+\item{return_full}{Optional whether to return full models per}
+
+\item{BiocParam}{Optional BiocParallel backend. If NULL, defaults to MulticoreParam(workers = cpus).}
+
+\item{cpus}{Integer. Used if BiocParam is NULL to set number of parallel workers.}
 }
 \value{
-Return a list which includes the fields: scaling_factors; ori_mat; norm_mat and model_list
+A named list with:
+\itemize{
+\item scaling_factors: a data.frame of computed scaling coefficients
+\item norm_mat: a normalized sparse matrix (dgCMatrix)
+\item If return_full = TRUE, also includes model_list: compact model fits
+}
 }
 \description{
-RunNorm function to execute the whole normalisation flow.
-}
-\examples{
-\dontrun{
-# Typical usage
-param <- BiocParallel::MulticoreParam(workers = 2, progressbar = TRUE)
-
-Result <- RunNorm(mat,
-  deg_design,
-  fix_reference = "random",
-  row_name_index = 1,
-  saving_path = out_dir,
-  n_pop = 1, BiocParam = param
-)
-}
-
+Executes the complete normalization pipeline using mixture models fitted to log-ratio distributions between samples.
 }

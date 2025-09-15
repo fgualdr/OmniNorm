@@ -1,32 +1,45 @@
 Package: GeneralNormalizer
-Title: What the Package Does (One Line, Title Case)
+Title: Normalization of Skewed Numerical Datasets Using Skewed Mixture Distributions
 Version: 1.0.0
 Authors@R: 
     person("Francesco", "Gualdrini", , "francesco.gualdrini@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-6180-7292"))
-Description: GeneralNormalizer is an R library that utilizes a mixed Skewed distribution to normalize allegedly any numerical (matrix-arranged) dataset. It has been developed to address the normalization of heavily unbalanced distributions.
+Description: 
+    GeneralNormalizer is an R package that uses skewed mixture distribution fitting to normalize numerical 
+    matrices, particularly effective for datasets with unbalanced distributions, such as transcriptomic, 
+    proteomic, or ChIP-seq signal matrices. Supports sparse matrices via the Matrix package for high-performance 
+    workflows like those used in single-cell analyses.
 License: MIT + file LICENSE
-Depends: 
-    fitdistrplus,
-    mixsmsn
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 4.1)
 Imports:
     BiocParallel,
-    circlize,
-    ComplexHeatmap,
+    Matrix,
     data.table,
-    dplyr,
+    stats,
+    tools,
+    methods,
     edgeR,
-    FactoMineR, 
+    mixsmsn,
+    rlang,
+    tibble,
+    fitdistrplus,
+    dplyr,
     graphics,
     grDevices,
     grid,
-    methods,
-    rlang,
-    stats,
-    tibble,
-    tools,
-    utils
-Encoding: UTF-8
-Language: Authors@R
+    ComplexHeatmap,
+    circlize,
+    FactoMineR
+Suggests:
+    RhpcBLASctl,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+URL: https://github.com/fgualdr/GeneralNormalizer
+BugReports: https://github.com/fgualdr/GeneralNormalizer/issues
+Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.2
