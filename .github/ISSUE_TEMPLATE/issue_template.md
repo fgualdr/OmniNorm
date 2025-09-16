@@ -6,7 +6,7 @@ labels: ''
 assignees: ''
 ---
 
-Please ask questions about how to use `GeneralNormalizer` on the
+Please ask questions about how to use `OmniNorm` on the
 [Bioconductor Support Site](https://support.bioconductor.org) using the
 appropriate tag(s) including the one for this package.
 
@@ -45,12 +45,6 @@ options(width = 120)
 
 </details>
 
-Indicate whether `BiocManager::valid()` returns `TRUE`. 
-
-- [ ] `BiocManager::valid()` is `TRUE`
-
-**Note**. To avoid potential issues with version mixing and reproducibility, do
-not install packages from `GitHub`.
 
 ## Additional Context
 
@@ -61,13 +55,3 @@ Provide some additional context for the bug report. You may include web links
 * a commit
 * code inside a commit
 * code from an R package
-
-## Is the package installed via bioconda? 
-
-We find that [bioconda](https://bioconda.github.io/) installations can often be
-problematic due to the nature of the setup environment and potential for version
-mixing.
-
-The preferred method for installing Bioconductor software through `BiocManager`
-and we do not support issues related to `bioconda` installations at this time.
-
