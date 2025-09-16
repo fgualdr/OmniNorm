@@ -432,7 +432,7 @@ fun_refref <- function(task, mat_ref, n_pop_reference, sigma_times, dist_family,
   if (!any(ok)) return(NULL)
 
   sc <- sum(r[ok]) / sum(s[ok])  # reference / sample
-  list(sample = samp, reference = ref, scaling = sc,
+  list(sample = samp, reference = ref, scaling = sc,mean_g    = unname(fit$interval["mean_g"]),
        model  = if (isTRUE(Norm_plot)) fit else NULL)
 }
 
@@ -471,7 +471,7 @@ fun_avgref <- function(sname, mat, avg_ref_vec, n_pop, sigma_times, dist_family,
   if (!any(ok)) return(NULL)
 
   sc <- sum(r[keep][ok]) / sum(s[keep][ok])
-  list(sample = sname, reference = "average_reference", scaling = sc,
+  list(sample = sname, reference = "average_reference", scaling = sc,mean_g    = unname(fit$interval["mean_g"]),
        model  = if (isTRUE(Norm_plot)) fit else NULL)
 }
 
@@ -509,9 +509,9 @@ fun_single <- function(sname, mat, ref, r_full, keep_r, n_pop, sigma_times, dist
   lr <- log(r_full[keep]) - log(s[keep])
   ok <- is.finite(lr) & lr >= fit$interval["lb"] & lr <= fit$interval["ub"]
   if (!any(ok)) return(NULL)
-
+  
   sc <- sum(r_full[keep][ok]) / sum(s[keep][ok])
-  list(sample = sname, reference = ref, scaling = sc,
+  list(sample = sname, reference = ref, scaling = sc,mean_g    = unname(fit$interval["mean_g"]),
        model  = if (isTRUE(Norm_plot)) fit else NULL)
 }
 

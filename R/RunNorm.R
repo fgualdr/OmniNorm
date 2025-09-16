@@ -164,10 +164,13 @@ RunNorm <- function(mat_path,
     if (!length(avg_results)) stop("All sample vs average_reference fits failed.")
 
     sc_dt <- data.table::rbindlist(lapply(avg_results, \(x)
-      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
+      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling, mean_g = x$mean_g)
     ), use.names = TRUE)
+
     sc_dt <- sc_dt[data.table::CJ(sample = design$Sample_ID), on = "sample"]  # align to design
+
     pairs_scaling <- stats::setNames(sc_dt$scaling, sc_dt$sample)
+    pairs_mean_g  <- stats::setNames(sc_dt$mean_g,  sc_dt$sample)
 
     ## Free memory
     rm( sc_dt)  # free memory
@@ -243,11 +246,14 @@ RunNorm <- function(mat_path,
     if (!length(fix_results)) stop("All sample vs fixed-reference fits failed.")
 
     sc_dt <- data.table::rbindlist(lapply(fix_results, \(x)
-      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
+      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling, mean_g = x$mean_g)
     ), use.names = TRUE)
-    sc_dt <- rbind(sc_dt, data.table::data.table(sample = ref, reference = ref, scaling = 1.0))
+
+    sc_dt <- rbind(sc_dt, data.table::data.table(sample = ref, reference = ref, scaling = 1.0, mean_g = NA))
     sc_dt <- sc_dt[data.table::CJ(sample = design$Sample_ID), on = "sample"]
+
     pairs_scaling <- stats::setNames(sc_dt$scaling, sc_dt$sample)
+    pairs_mean_g  <- stats::setNames(sc_dt$mean_g,  sc_dt$sample)
 
     ## Optional: plotting (throttle to avoid explosion)
     if (isTRUE(Norm_plot)) {
@@ -302,6 +308,7 @@ RunNorm <- function(mat_path,
   cat("|| Apply scaling to the matrix ||\n")
   sample_ids <- design$Sample_ID
   scaling    <- pairs_scaling[sample_ids]
+  mean_g    <- exp(pairs_mean_g[sample_ids])
 
   ## In-memory sparse: slice + scale in place (fast)
   mat_subset <- mat[, sample_ids, drop = FALSE]
@@ -315,6 +322,7 @@ RunNorm <- function(mat_path,
   
   design_scaling <- design_df[sample_ids, , drop = FALSE]
   design_scaling$scaling <- scaling
+  design_scaling$mean_g <- exp(pairs_mean_g[design_scaling$Sample_ID])
 
   ## ---- save (size- and backend-aware) ----
   if (isTRUE(Save_results)) {
@@ -353,5 +361,4 @@ RunNorm <- function(mat_path,
   return(Result)
 
 }
-
 

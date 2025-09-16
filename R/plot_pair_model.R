@@ -79,40 +79,48 @@ plot_pair_model <- function(ll) {
   png(fpath, width = 2000, height = 2000, res = 600, type = "cairo-png")
     on.exit(grDevices::dev.off(), add = TRUE)
 
-    par(mar = c(2, 2, 2, 2))
-    layout(matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3), 4, 4, byrow = TRUE))
+    # smaller margins + smaller text
+    par(mar = c(4.2, 4.2, 3, 2), 
+        cex.axis = 0.7,   # shrink axis numbers
+        cex.lab  = 0.8,   # shrink axis labels
+        cex.main = 0.9)   # shrink titles
+
+    layout(matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 
+                    2, 2, 3, 3, 2, 2, 3, 3), 4, 4, byrow = TRUE))
 
     ## Panel 1: histogram + mixture/components (density scale)
-    h <- hist(ratio, breaks = 100, plot = FALSE) # for a better looking breaks --> breaks= "FD"
+    h <- hist(ratio, breaks = 100, plot = FALSE)
     plot(h, freq = FALSE, col = "grey85", border = FALSE,
-        xlab = "log(reference / sample)", main = paste0("Mixture fit number of populations: ", n_pop),
-        xlim = c(x_min, x_max), ylim = c(0, max(h$density, na.rm = TRUE) * 1.2),
+        xlab = "log(reference / sample)", 
+        ylab = "Density",
+        main = paste0("Mixture fit: ", n_pop, " populations"),
+        xlim = c(x_min, x_max), 
+        ylim = c(0, max(h$density, na.rm = TRUE) * 1.2),
         axes = TRUE)
 
-    # components
+    # components with thinner lines
     for (j in seq_len(n_pop)) {
       comp <- model$pii[j] * dSN(xx, model$mu[j], model$sigma2[j], model$shape[j])
-      lines(xx, comp, col = cols[j], lwd = if (j == best) 2 else 1)
+      lines(xx, comp, col = cols[j], lwd = if (j == best) 1.2 else 0.8)
     }
-    # overall mixture (sum of components)
     mix <- rowSums(sapply(seq_len(n_pop), function(j)
       model$pii[j] * dSN(xx, model$mu[j], model$sigma2[j], model$shape[j])))
-    lines(xx, mix, col = "blue", lwd = 1.5)
-    abline(v = c(lb, ub), col = "red", lty = 2)
+    lines(xx, mix, col = "blue", lwd = 1)
+    abline(v = c(lb, ub), col = "red", lty = 2, lwd = 0.8)
 
-    ## Panel 2: original scatter with invariant points
-    plot(ref, samp, log = "xy", pch = 20, cex = 0.3,
+    ## Panel 2: original scatter
+    plot(ref, samp, log = "xy", pch = 20, cex = 0.2,
         xlab = "Reference", ylab = "Sample",
         xlim = c(mmin, mmax), ylim = c(mmin, mmax), main = "Original")
-    if (length(ww)) points(ref[ww], samp[ww], pch = 20, cex = 0.3, col = "red")
-    abline(a = 0, b = 1, col = "red")
+    if (length(ww)) points(ref[ww], samp[ww], pch = 20, cex = 0.2, col = "red")
+    abline(a = 0, b = 1, col = "red", lwd = 0.8)
 
     ## Panel 3: scaled scatter using exp(mean_g)
     scale_g <- exp(unname(model$interval["mean_g"]))
-    plot(ref, samp * scale_g, log = "xy", pch = 20, cex = 0.3,
+    plot(ref, samp * scale_g, log = "xy", pch = 20, cex = 0.2,
         xlab = "Reference", ylab = "Sample * exp(mean_g)",
         xlim = c(mmin, mmax), ylim = c(mmin, mmax), main = "Scaled")
-    abline(a = 0, b = 1, col = "red")
+    abline(a = 0, b = 1, col = "red", lwd = 0.8)
 
-    invisible(fpath)
+  invisible(fpath)
 }
