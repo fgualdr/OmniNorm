@@ -36,4 +36,4 @@ You can install the latest development version from GitHub using:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("your-username/OmniNorm")
+devtools::install_github("fgualdr/OmniNorm")
