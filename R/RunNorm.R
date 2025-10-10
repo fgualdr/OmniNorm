@@ -83,7 +83,8 @@ RunNorm <- function(mat_path,
     message("No fix_reference provided. Using all samples.")
   } else if (is.character(fix_reference) && length(fix_reference) == 1 && fix_reference == "random") {
     set.seed(123456)
-    n <- min(50L, max(1L, floor(nrow(design) * 0.3)))
+    n <- max(1L, floor(nrow(design) * 0.3))
+    if(n<50 & nrow(design) < 50) n <- nrow(design)
     fix_reference <- sample(design$Sample_ID, n)
     message("Randomly selected ", n, " samples as reference.")
   } else if (is.numeric(fix_reference) && length(fix_reference) == 1 && fix_reference < 1) {
@@ -129,10 +130,34 @@ RunNorm <- function(mat_path,
     pair_results <- Filter(Negate(is.null), pair_results)
     if (!length(pair_results)) stop("All reference pair fits failed.")
 
-    dt <- data.table::rbindlist(lapply(pair_results, \(x)
-      data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
-    ), use.names = TRUE)
+    dt <- data.table::rbindlist(
+      lapply(pair_results, \(x)
+        data.table::data.table(sample = x$sample, reference = x$reference, scaling = x$scaling)
+      ), use.names = TRUE
+    )
     dt <- dt[is.finite(scaling)]
+    # rowbind the lower triangle too:
+    # Mirror the pairs
+    dt <- rbind(
+      dt,
+      data.table::data.table(
+        sample    = dt$reference,
+        reference = dt$sample,
+        scaling   = 1 / dt$scaling
+      )
+    )
+
+    # Add diagonals (sample vs. self)
+    dt <- rbind(
+      dt,
+      data.table::data.table(
+        sample    = design_ref$Sample_ID,
+        reference = design_ref$Sample_ID,
+        scaling   = 1.0
+      )
+    )
+
+    # Now average across all scaling values per sample
     pairscombo <- dt[, .(av_scaling = mean(scaling, na.rm = TRUE)), by = sample]
     data.table::setnames(pairscombo, "sample", "samples")
 
