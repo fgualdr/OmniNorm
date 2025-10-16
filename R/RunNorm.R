@@ -50,6 +50,37 @@ RunNorm <- function(mat_path,
                     BiocParam = NULL,
                     cpus = 2) {
 
+  # helper
+  `%||%` <- function(x, y) if (is.null(x)) y else x
+
+  ## ---- ensure BiocParam ----
+  if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+    RhpcBLASctl::blas_set_num_threads(1L)
+    RhpcBLASctl::omp_set_num_threads(1L)
+  }
+
+  # if user didn't pass a backend, create one using `cpus`
+  if (is.null(BiocParam)) {
+    cpus <- as.integer(cpus %||% 1L)
+    cpus <- if (is.na(cpus) || cpus < 1L) 1L else cpus
+
+    # prefer forking on Linux/macOS; fall back to sockets elsewhere
+    if (.Platform$OS.type == "unix") {
+      BiocParam <- BiocParallel::MulticoreParam(
+        workers     = cpus,
+        progressbar = FALSE
+      )
+    } else {
+      BiocParam <- BiocParallel::SnowParam(
+        workers     = cpus,
+        progressbar = FALSE
+      )
+    }
+  }
+
+  # convenience: a serial backend for plotting (graphics are fragile in headless containers)
+  .PLOT_PARAM <- BiocParallel::SerialParam(progressbar = FALSE)
+
   ## ---- guards ----
   if (isTRUE(Save_results) && is.null(saving_path)) {
     stop("To save plots/results, please provide 'saving_path'.")
@@ -57,12 +88,6 @@ RunNorm <- function(mat_path,
   if (!is.null(n_pop_reference) && n_pop_reference > 3) stop("n_pop_reference must be between 1 and 3.")
   if (!is.null(n_pop) && n_pop > 3) stop("n_pop must be between 1 and 3.")
 
-  ## ---- ensure BiocParam ----
-  # before creating BPPARAM
-  if (requireNamespace("RhpcBLASctl", quietly = TRUE)) {
-    RhpcBLASctl::blas_set_num_threads(1L)
-    RhpcBLASctl::omp_set_num_threads(1L)
-  }
 
   ## ---- import inputs ----
   cat("|| Import matrix\n")
@@ -243,7 +268,7 @@ RunNorm <- function(mat_path,
           ))
           NULL
         },
-        BPPARAM = BiocParam
+        BPPARAM = .PLOT_PARAM
       )
     }
     ## Free memory
@@ -323,7 +348,7 @@ RunNorm <- function(mat_path,
           ))
           NULL
         },
-        BPPARAM = BiocParam
+        BPPARAM = .PLOT_PARAM
       )
     }
 
