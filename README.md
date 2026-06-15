@@ -37,3 +37,21 @@ You can install the latest development version from GitHub using:
 ```r
 # install.packages("devtools")
 devtools::install_github("fgualdr/OmniNorm")
+```
+---
+
+## Citation:
+If you use OmniNorm in your work, please cite:
+
+Gualdrini F. OmniNorm: Robust normalization of numerical matrices using skewed mixture models. GitHub repository. Available at:
+https://github.com/fgualdr/OmniNorm?utm_source=chatgpt.com
+
+## BibTeX
+@misc{gualdrini_omninorm,
+  author       = {Francesco Gualdrini},
+  title        = {OmniNorm: Robust normalization of numerical matrices using skewed mixture models},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/fgualdr/OmniNorm}}
+}
+
