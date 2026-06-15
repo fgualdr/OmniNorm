@@ -1,2 +1,11 @@
 YEAR: 2025
 COPYRIGHT HOLDER: Francesco Gualdrini
+
+OmniNorm was originally developed by Francesco Gualdrini.
+
+The name "OmniNorm" refers specifically to the normalization methodology
+implemented in this repository and its associated releases.
+
+Users are welcome to use, modify, and extend the software under the MIT
+license, but should not represent modified versions as the original
+OmniNorm methodology without appropriate attribution.
