@@ -4,7 +4,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/fgualdr/OmniNorm)](https://github.com/fgualdr/OmniNorm/issues)
 [![GitHub pulls](https://img.shields.io/github/issues-pr/fgualdr/OmniNorm)](https://github.com/fgualdr/OmniNorm/pulls)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check-bioc](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check-bioc.yaml/badge.svg)](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check-bioc.yaml)
 [![R-CMD-check](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fgualdr/OmniNorm/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
