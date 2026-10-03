@@ -10,6 +10,7 @@ Description:
     proteomic, or ChIP-seq signal matrices. Supports sparse matrices via the Matrix package for high-performance 
     workflows like those used in single-cell analyses.
 License: file LICENSE
+License_restricts_use: yes
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.1)
