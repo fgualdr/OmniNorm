@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: >-
+  If you use OmniNorm in research that results in a scientific publication,
+  please cite OmniNorm using the citation information below.
+title: "OmniNorm: Normalization of Skewed Numerical Datasets Using Skewed Mixture Distributions"
+type: software
+authors:
+  - family-names: "Gualdrini"
+    given-names: "Francesco"
+    orcid: "https://orcid.org/0000-0002-6180-7292"
+
+repository-code: "https://github.com/fgualdr/OmniNorm"
+url: "https://github.com/fgualdr/OmniNorm"
+
+version: "1.0.0"
+date-released: "2025"
+
+license: "LicenseRef-OmniNorm-NonCommercial"
+
+keywords:
+  - normalization
+  - bioinformatics
+  - transcriptomics
+  - proteomics
+  - ChIP-seq
+  - single-cell
+  - skewed distributions
+  - mixture models
