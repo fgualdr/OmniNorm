@@ -1,11 +1,135 @@
-YEAR: 2025
-COPYRIGHT HOLDER: Francesco Gualdrini
+OmniNorm Non-Commercial Research License
+
+Copyright (c) 2025-2026 Francesco Gualdrini
+All rights reserved.
+
+1. Scope
+
+This license applies to the OmniNorm software, including its source code, documentation, and associated materials distributed as part of this repository (collectively, the “Software”).
 
 OmniNorm was originally developed by Francesco Gualdrini.
 
-The name "OmniNorm" refers specifically to the normalization methodology
-implemented in this repository and its associated releases.
+The name “OmniNorm” refers to the normalization methodology and its reference implementation distributed through the official OmniNorm repository.
 
-Users are welcome to use, modify, and extend the software under the MIT
-license, but should not represent modified versions as the original
-OmniNorm methodology without appropriate attribution.
+2. Non-Commercial Research Use
+
+Permission is granted, free of charge, to use, copy, and modify the Software for:
+
+* academic research;
+* scientific research conducted by non-profit or public research organizations;
+* educational purposes;
+* personal, non-commercial research and evaluation.
+
+Such use is permitted regardless of whether the resulting research is subsequently published, subject to the citation requirements described below.
+
+Use of the Software by an academic, educational, non-profit, or public research organization remains permitted when the research receives external or industry funding, provided that the Software itself is not being used to provide a commercial product or service on behalf of, or primarily for the commercial benefit of, a third party.
+
+3. Scientific Publications and Citation
+
+Scientific results generated, processed, normalized, analyzed, or otherwise materially supported using OmniNorm may be published.
+
+Any scientific publication in which OmniNorm materially contributes to the generation or analysis of reported results must appropriately acknowledge and cite OmniNorm.
+
+Users must cite the designated OmniNorm scientific publication when one is specified by the copyright holder.
+
+If no designated scientific publication is available, users must cite the OmniNorm software repository and, where available, the specific software version and/or archived DOI used in the analysis.
+
+Citation or acknowledgement of OmniNorm does not imply endorsement of the resulting research by the copyright holder.
+
+4. Commercial Use
+
+Commercial use of the Software is not permitted under this license.
+
+For the purposes of this license, commercial use includes, but is not limited to:
+
+* use of the Software as part of a commercial product or service;
+* use of the Software to provide paid data-analysis, consulting, diagnostic, pharmaceutical, biotechnology, or other commercial services;
+* incorporation of the Software or substantial portions of it into software distributed commercially;
+* use of the Software primarily for commercial advantage or monetary compensation;
+* internal use by a for-profit organization when the use directly supports commercial research, product development, commercial decision-making, or provision of commercial services.
+
+Commercial use requires a separate written license or explicit written permission from the copyright holder.
+
+For commercial licensing inquiries, contact the copyright holder.
+
+5. Modification
+
+Users may modify the Software for purposes permitted by this license.
+
+Modified versions must be clearly identified as modified and must not be represented as the original OmniNorm software, reference implementation, or methodology.
+
+Any scientific publication using a modified version must clearly state that the Software was modified when those modifications could materially affect the analysis or interpretation of the results.
+
+Modification of the Software does not remove the citation requirements of this license when the modified software is derived substantially from OmniNorm.
+
+6. Redistribution
+
+Redistribution of the original or modified Software is permitted only for non-commercial academic, scientific, or educational purposes.
+
+Any redistribution must:
+
+1. include this license in its entirety;
+2. retain the original copyright notice;
+3. clearly identify any modifications made to the Software;
+4. preserve the attribution and citation requirements described in this license; and
+5. not impose terms that would remove or weaken the requirements of this license with respect to OmniNorm-derived material.
+
+Redistribution does not grant permission for commercial use.
+
+7. OmniNorm Name
+
+The name “OmniNorm” identifies the normalization methodology and reference implementation originally developed by Francesco Gualdrini.
+
+Modified or derivative versions may describe themselves as being “based on OmniNorm”, “derived from OmniNorm”, or equivalent, provided that the relationship is accurately represented and appropriate attribution is given.
+
+Modified or derivative versions must not be represented as the original OmniNorm implementation or as an official version of OmniNorm without prior written permission from the copyright holder.
+
+This license does not grant any right to use the OmniNorm name to imply endorsement, certification, sponsorship, or approval by the copyright holder.
+
+8. Attribution and Copyright Notices
+
+The copyright notice and this license must be retained in all copies or substantial portions of the Software.
+
+Nothing in this license transfers ownership of the Software or its copyright.
+
+Except for the permissions explicitly granted by this license, all rights are reserved by the copyright holder.
+
+9. Third-Party Software
+
+This license applies only to components of the Software for which the copyright holder has the authority to grant these rights.
+
+Third-party libraries, dependencies, code, data, or other materials included in or used by OmniNorm remain subject to their respective licenses and terms.
+
+Nothing in this license restricts rights independently granted under the licenses of such third-party materials.
+
+10. Termination
+
+The rights granted under this license terminate automatically if a user materially violates its terms.
+
+Following termination, the user must cease any use, modification, or distribution of the Software that requires permission under this license.
+
+The copyright holder may provide written permission to reinstate the license following correction of the violation.
+
+11. No Warranty
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR SCIENTIFIC OR COMMERCIAL APPLICATION.
+
+THE COPYRIGHT HOLDER DOES NOT WARRANT THAT THE SOFTWARE IS ERROR-FREE OR THAT RESULTS OBTAINED USING THE SOFTWARE ARE CORRECT, COMPLETE, REPRODUCIBLE, OR SUITABLE FOR ANY PARTICULAR PURPOSE.
+
+12. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE, MODIFICATION, DISTRIBUTION, OR OTHER DEALINGS IN THE SOFTWARE, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE.
+
+13. No Additional Rights
+
+No rights are granted except those expressly stated in this license.
+
+In particular, this license does not grant permission for commercial use of the Software.
+
+Separate commercial licenses or other permissions may be granted by the copyright holder without affecting this license.
+
+⸻
+
+OmniNorm
+Copyright (c) 2025-2026 Francesco Gualdrini
+All rights reserved.
