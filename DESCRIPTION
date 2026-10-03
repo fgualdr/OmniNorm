@@ -9,7 +9,7 @@ Description:
     matrices, particularly effective for datasets with unbalanced distributions, such as transcriptomic, 
     proteomic, or ChIP-seq signal matrices. Supports sparse matrices via the Matrix package for high-performance 
     workflows like those used in single-cell analyses.
-License: MIT + file LICENSE
+License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.1)
